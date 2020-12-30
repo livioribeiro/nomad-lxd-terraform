@@ -1,0 +1,28 @@
+[http]
+  [http.routers]
+    [http.routers.consul]
+      service = "consul"
+      rule = "Host(`consul.127.0.0.1.nip.io`)"
+
+    [http.routers.nomad]
+      service = "nomad"
+      rule = "Host(`nomad.127.0.0.1.nip.io`)"
+
+  [http.services]
+    [http.services.consul]
+      [http.services.consul.loadBalancer]
+        [[http.services.consul.loadBalancer.servers]]
+          url = "http://consul0:8500"
+        [[http.services.consul.loadBalancer.servers]]
+          url = "http://consul1:8500"
+        [[http.services.consul.loadBalancer.servers]]
+          url = "http://consul2:8500"
+
+    [http.services.nomad]
+      [http.services.nomad.loadBalancer]
+        [[http.services.nomad.loadBalancer.servers]]
+          url = "http://nomad-server0:4646"
+        [[http.services.nomad.loadBalancer.servers]]
+          url = "http://nomad-server1:4646"
+        [[http.services.nomad.loadBalancer.servers]]
+          url = "http://nomad-server2:4646"
