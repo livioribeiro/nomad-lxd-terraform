@@ -8,12 +8,9 @@ variable "cni_plugins_version" {
   default = "0.9.0"
 }
 
-locals {
-  traefik_url = "https://github.com/traefik/traefik/releases/download/v${var.traefik_version}/traefik_v${var.traefik_version}_linux_amd64.tar.gz"
-  cni_plugins_url = "https://github.com/containernetworking/plugins/releases/download/v${var.cni_plugins_version}/cni-plugins-linux-amd64-v${var.cni_plugins_version}.tgz"
-  hashicorp_gpg = file("./gpg/hashicorp.gpg")
-  envoy_gpg = file("./gpg/envoy.gpg")
-  docker_gpg = file("./gpg/docker.gpg")
+variable "prometheus_version" {
+  type = string
+  default = "2.23.0"
 }
 
 terraform {
@@ -30,11 +27,19 @@ provider "lxd" {
   accept_remote_certificate    = true
 }
 
-resource "lxd_cached_image" "ubuntu" {
-  source_remote = "ubuntu"
-  source_image  = "focal/amd64"
+data "null_data_source" "base" {
+  inputs = {
+    source = filesha256("packer/base.pkr.hcl")
+  }
+}
 
-  lifecycle {
-    prevent_destroy = true
+resource "null_resource" "base" {
+  triggers = {
+    source_hash = data.null_data_source.base.outputs.source
+  }
+
+  provisioner "local-exec" {
+    command = "packer build base.pkr.hcl"
+    working_dir = "packer"
   }
 }

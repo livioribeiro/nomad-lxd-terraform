@@ -5,11 +5,11 @@ advertise_addr = "{{ GetInterfaceIP \"eth0\" }}"
 client_addr = "127.0.0.1 {{ GetInterfaceIP \"eth0\" }}"
 
 ui_config {
-    enabled = true
+  enabled = true
 }
 
 connect {
-    enabled = true
+  enabled = true
 }
 
 %{ if instance == 0 ~}

@@ -11,6 +11,14 @@ job "countdash" {
       name = "count-api"
       port = "http"
 
+      check {
+        type     = "http"
+        path     = "/health"
+        port     = "http"
+        interval = "10s"
+        timeout  = "2s"
+      }
+
       connect {
         sidecar_service {}
       }
@@ -40,6 +48,14 @@ job "countdash" {
       port = "http"
 
       tags = ["traefik.enable=true"]
+
+      check {
+        type     = "http"
+        path     = "/health"
+        port     = "http"
+        interval = "10s"
+        timeout  = "2s"
+      }
 
       connect {
         sidecar_service {

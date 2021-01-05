@@ -1,30 +1,32 @@
+data "null_data_source" "traefik" {
+  inputs = {
+    source = filesha256("packer/traefik.pkr.hcl")
+    service = filesha256("packer/traefik.service")
+  }
+}
+
+resource "null_resource" "traefik" {
+  depends_on = [ null_resource.consul ]
+
+  triggers = {
+    source_hash = data.null_data_source.traefik.outputs.source
+    service_hash = data.null_data_source.traefik.outputs.service
+  }
+
+  provisioner "local-exec" {
+    command = "packer build -var 'traefik_version=${var.traefik_version}' traefik.pkr.hcl"
+    working_dir = "packer"
+  }
+}
+
 resource "lxd_container" "proxy" {
   name  = "proxy"
-  image = lxd_cached_image.ubuntu.fingerprint
+  image = "traefik"
 
-  depends_on = [ lxd_container.consul ]
-
-  config = {
-    "user.user-data" = format("#cloud-config\n%s", yamlencode({
-      apt = {
-        sources = {
-          "hashicorp.list" = {
-            source = "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
-            key = local.hashicorp_gpg
-          }
-        }
-      }
-      packages = ["consul"]
-      runcmd = [
-        "curl -fsSL -o /tmp/traefik.tar.gz ${local.traefik_url}",
-        "tar -C /usr/local/bin -xzf /tmp/traefik.tar.gz traefik",
-        "mkdir /var/consul",
-        "chown -R consul.consul /var/consul/",
-        "service consul start --enable",
-        "service traefik start --enable",
-      ]
-    }))
-  }
+  depends_on = [
+    null_resource.traefik,
+    lxd_container.consul,
+  ]
 
   file {
     source             = "./consul/client.hcl"
@@ -34,20 +36,15 @@ resource "lxd_container" "proxy" {
   }
 
   file {
-    source      = "./proxy/traefik.service"
-    target_file = "/etc/systemd/system/traefik.service"
-  }
-
-  file {
-    source             = "./proxy/traefik.toml"
-    target_file        = "/etc/traefik/traefik.toml"
+    source             = "./proxy/traefik.yaml"
+    target_file        = "/etc/traefik/traefik.yaml"
     create_directories = true
     mode = "0755"
   }
 
   file {
-    source             = "./proxy/nomad.toml"
-    target_file        = "/etc/traefik/conf/nomad.toml"
+    source             = "./proxy/nomad.yaml"
+    target_file        = "/etc/traefik/conf/nomad.yaml"
     create_directories = true
     mode = "0755"
   }
@@ -68,5 +65,17 @@ resource "lxd_container" "proxy" {
       "listen"  = "tcp:127.0.0.1:8080"
       "connect" = "tcp:127.0.0.1:8080"
     }
+  }
+}
+
+resource "null_resource" "start_traefik" {
+  depends_on = [ lxd_container.proxy ]
+
+  provisioner "local-exec" {
+    command = "lxc exec ${lxd_container.proxy.name} -- service consul start --enable"
+  }
+
+  provisioner "local-exec" {
+    command = "lxc exec ${lxd_container.proxy.name} -- service traefik start --enable"
   }
 }
