@@ -1,45 +1,15 @@
-variable "traefik_version" {
-  type = string
-  default = "2.3.6"
+resource "tls_private_key" "nomad_cluster" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
-variable "cni_plugins_version" {
-  type = string
-  default = "0.9.0"
+resource "local_sensitive_file" "ssh_private_key" {
+  filename = "./ssh/id_rsa"
+  content = tls_private_key.nomad_cluster.private_key_pem
 }
 
-variable "prometheus_version" {
-  type = string
-  default = "2.23.0"
-}
-
-terraform {
-  required_providers {
-    lxd = {
-      source  = "terraform-lxd/lxd"
-      version = "1.5.0"
-    }
-  }
-}
-
-provider "lxd" {
-  generate_client_certificates = true
-  accept_remote_certificate    = true
-}
-
-data "null_data_source" "base" {
-  inputs = {
-    source = filesha256("packer/base.pkr.hcl")
-  }
-}
-
-resource "null_resource" "base" {
-  triggers = {
-    source_hash = data.null_data_source.base.outputs.source
-  }
-
-  provisioner "local-exec" {
-    command = "packer build base.pkr.hcl"
-    working_dir = "packer"
-  }
+locals {
+  cloud_init = templatefile("./cloud-init.yaml.tpl", {
+    ssh_key = tls_private_key.nomad_cluster.public_key_openssh
+  })
 }

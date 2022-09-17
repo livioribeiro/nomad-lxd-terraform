@@ -1,31 +1,49 @@
-# Hashicorp Nomad cluster with Consul, Traefik, Terraform and LXD
+# Hashicorp Nomad cluster with Terraform, LXD and Ansible
 
-[Terraform](https://www.terraform.io) plan to create a [Nomad](https://www.nomadproject.io) cluster
-with [Consul](https://www.consul.io), [Traefik](https://traefik.io/traefik/)
-and [Prometheus](https://prometheus.io/) using [LXD](https://linuxcontainers.org/#LXD)
+Terraform configuration to create a [Nomad](https://www.nomadproject.io) cluster
+in [LXD](https://linuxcontainers.org/#LXD) using [Terraform](https://www.terraform.io)
+and [Ansible](https://www.ansible.com/)
 
-[Packer](https://www.packer.io/) is used to build the LXD images used to create the containers.
+After deploying, the following urls will be available:
 
-The cluster contains 11 nodes:
+- http://traefik.localhost
+- http://nomad.localhost
+- http://consul.localhost
+
+The cluster contains the following nodes:
 
 - 3 Consul nodes
 - 3 Nomad server nodes
-- 3 Nomad client nodes
-- 1 Traefik node
-- 1 Prometheus node
+- 5 Nomad client nodes (3 "apps" nodes, 2 "infra" node)
+- 1 NFS server node
+- 1 Load Balancer node running HAProxy
 
-Consul is used to bootstrap the Nomad cluster, for service discovery
-and for the service mesh
+Terraform creates the machines and generates an inventory that Ansible uses to
+provision the cluster.
 
-Traefik is the entrypoint of the cluster.
-It will use Consul service catalog to expose the services.
+Consul is used to bootstrap the Nomad cluster, for service discovery and service mesh.
 
-The proxy configuration exposes the services at `{{ service name }}.service.127.0.0.1.nip.io`,
+The client infra nodes are the entrypoint of the cluster in which Traefik will be deployed
+and use Consul service catalog to expose applications.
+
+HAProxy is configured to load balance between the two infra nodes. The container will map
+port 80 on the host in order to expose the services under `*.localhost`.
+
+The proxy configuration exposes the services at `{{ service name }}.apps.localhost`,
 so when you deploy the service [hello.nomad](hello.nomad),
-it will be exposed at `hello-world.service.127.0.0.1.nip.io`
+it will be exposed at `hello-world.apps.localhost`
+
+## NFS and CSI Plugin
+
+For storage with the NFS node, a CSI plugin will be configured using the [RocketDuck CSI plugin](https://gitlab.com/rocketduck/csi-plugin-nfs).
+
+
+The are also examples of [other CSI plugins](csi_plugins).
+
+## Examples
 
 There are 3 example jobs:
 
-- [hello.nomad](hello.nomad), a simples hello world
-- [countdash.nomad](countdash.nomad), shows the usage of consul connect
-- [grafana.nomar](grafana.nomad), just deploys [Grafana](https://grafana.com)
+- [hello.nomad](examples/hello.nomad), a simples hello world
+- [countdash.nomad](examples/countdash.nomad), shows the usage of consul connect
+- [nfs](examples/nfs/), show how to setup volumes using the nfs csi plugin
