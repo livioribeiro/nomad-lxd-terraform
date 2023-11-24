@@ -124,7 +124,7 @@ data "cloudinit_config" "nomad_client" {
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.nomad_client.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.nomad_client.private_key_pem },
         {
-          path = "/etc/systemd/resolved.conf.d/docker.conf",
+          path    = "/etc/systemd/resolved.conf.d/docker.conf",
           content = <<-EOT
             [Resolve]
             DNSStubListener=yes
@@ -132,7 +132,7 @@ data "cloudinit_config" "nomad_client" {
           EOT
         },
         {
-          path = "/etc/docker/daemon.json",
+          path    = "/etc/docker/daemon.json",
           content = <<-EOT
             {
               "dns": ["172.17.0.1"],

@@ -8,11 +8,11 @@ data "cloudinit_config" "nfs_server" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      packages = ["openssh-server", "nfs-kernel-server"]
-      runcmd = ["mkdir /srv/nomad"]
+      packages            = ["openssh-server", "nfs-kernel-server"]
+      runcmd              = ["mkdir /srv/nomad"]
       write_files = [
         {
-          path = "/etc/exports"
+          path    = "/etc/exports"
           content = "/srv/nomad *(rw,sync,no_subtree_check,no_root_squash)"
         }
       ]
@@ -39,25 +39,5 @@ resource "lxd_instance" "nfs_server" {
     })
     "security.privileged" = true
     "raw.apparmor"        = "mount fstype=rpc_pipefs, mount fstype=nfsd,"
-  }
-
-  device {
-    name = "map_port_80"
-    type = "proxy"
-
-    properties = {
-      listen  = "tcp:0.0.0.0:80"
-      connect = "tcp:127.0.0.1:80"
-    }
-  }
-
-  device {
-    name = "map_port_443"
-    type = "proxy"
-
-    properties = {
-      listen  = "tcp:0.0.0.0:443"
-      connect = "tcp:127.0.0.1:443"
-    }
   }
 }

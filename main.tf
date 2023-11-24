@@ -39,7 +39,7 @@ resource "tls_private_key" "ssh_nomad_cluster" {
 
 resource "local_sensitive_file" "ssh_private_key" {
   filename = ".tmp/ssh/id_rsa"
-  content = tls_private_key.ssh_nomad_cluster.private_key_openssh
+  content  = tls_private_key.ssh_nomad_cluster.private_key_openssh
 }
 
 data "tls_public_key" "ssh_nomad_cluster" {

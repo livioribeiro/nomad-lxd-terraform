@@ -8,7 +8,7 @@ data "cloudinit_config" "load_balancer" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      packages = ["openssh-server", "haproxy"]
+      packages            = ["openssh-server", "haproxy"]
       write_files = [
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.consul.cert_pem },
