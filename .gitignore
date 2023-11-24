@@ -35,5 +35,6 @@ override.tf.json
 
 .terraform.lock.hcl
 
-ssh/
-ansible/inventory/hosts
+.tmp/
+.venv/
+.vscode/

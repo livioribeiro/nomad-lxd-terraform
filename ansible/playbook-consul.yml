@@ -1,0 +1,5 @@
+---
+- name: Initialize Consul acl
+  hosts: consul-server-1
+  roles:
+    - consul_server_acl

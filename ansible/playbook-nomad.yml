@@ -1,0 +1,5 @@
+---
+- name: Initialize Nomad acl
+  hosts: nomad-server-1
+  roles:
+    - nomad_server_acl
