@@ -1,0 +1,10 @@
+---
+- name: Initialize Vault
+  hosts: vault-server-1
+  roles:
+    - vault_server_init
+
+- name: Unseal Vault
+  hosts: vault_servers
+  roles:
+    - vault_server_unseal

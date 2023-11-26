@@ -3,6 +3,11 @@ variable "ubuntu_version" {
   default = "jammy"
 }
 
+variable "ubuntu_image" {
+  type    = string
+  default = "images:ubuntu/jammy/cloud"
+}
+
 variable "external_domain" {
   type    = string
   default = "localhost"

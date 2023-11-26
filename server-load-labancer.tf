@@ -16,7 +16,9 @@ data "cloudinit_config" "load_balancer" {
         {
           path = "/etc/haproxy/haproxy.cfg"
           content = templatefile("cloud-init/haproxy.cfg", {
+            external_domain     = var.external_domain
             consul_servers      = local.consul_servers
+            vault_servers       = local.vault_servers
             nomad_servers       = local.nomad_servers
             nomad_infra_clients = local.nomad_infra_clients
           })
@@ -28,7 +30,7 @@ data "cloudinit_config" "load_balancer" {
 
 resource "lxd_instance" "load_balancer" {
   name     = local.load_balancer["name"]
-  image    = "images:ubuntu/${var.ubuntu_version}/cloud"
+  image    = var.ubuntu_image
   profiles = ["default", lxd_profile.nomad.name]
 
   config = {
@@ -63,5 +65,14 @@ resource "lxd_instance" "load_balancer" {
       listen  = "tcp:0.0.0.0:443"
       connect = "tcp:127.0.0.1:443"
     }
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      host        = self.ipv4_address
+      user        = "ubuntu"
+      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+    }
+    inline = ["cloud-init status -w > /dev/null"]
   }
 }

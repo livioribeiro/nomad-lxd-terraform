@@ -3,7 +3,7 @@ locals {
     for i in [1, 2, 3] : "consul-server-${i}" => "10.99.0.${10 + i}"
   }
   vault_servers = {
-    for i in [1, 2, 3] : "vault-server$-${i}" => "10.99.0.${20 + i}"
+    for i in [1, 2, 3] : "vault-server-${i}" => "10.99.0.${20 + i}"
   }
   nomad_servers = {
     for i in [1, 2, 3] : "nomad-server-${i}" => "10.99.0.${30 + i}"

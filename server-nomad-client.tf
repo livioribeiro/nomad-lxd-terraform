@@ -12,11 +12,6 @@ locals {
     { for s, _ in local.nomad_infra_clients : s => "infra" },
     { for s, _ in local.nomad_apps_clients : s => "apps" },
   )
-  nomad_client_raw_lxc = <<-EOT
-    lxc.apparmor.profile=unconfined
-    lxc.cgroup.devices.allow=a
-    lxc.cap.drop=
-  EOT
 }
 
 resource "consul_acl_token" "nomad_client_agent" {
@@ -116,6 +111,7 @@ data "cloudinit_config" "nomad_client" {
         "usermod -aG docker nomad",
         "systemctl enable consul nomad docker",
         "systemctl start consul nomad docker",
+        "systemctl restart systemd-resolved",
         "docker plugin install grafana/loki-docker-driver:2.9.2 --alias loki --grant-all-permissions",
         "mount --make-shared /",
       ]
@@ -123,6 +119,15 @@ data "cloudinit_config" "nomad_client" {
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.nomad_client.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.nomad_client.private_key_pem },
+        {
+          path    = "/etc/systemd/resolved.conf.d/consul.conf",
+          content = <<-EOT
+            [Resolve]
+            DNS=127.0.0.1:8600
+            DNSSEC=false
+            Domains=~consul
+          EOT
+        },
         {
           path    = "/etc/systemd/resolved.conf.d/docker.conf",
           content = <<-EOT
@@ -165,10 +170,11 @@ data "cloudinit_config" "nomad_client" {
 }
 
 resource "lxd_instance" "nomad_client" {
+  depends_on = [ lxd_instance.nomad_server ]
   for_each = local.nomad_clients
 
   name     = each.key
-  image    = "images:ubuntu/${var.ubuntu_version}/cloud"
+  image    = var.ubuntu_image
   profiles = ["default", lxd_profile.nomad.name]
 
   limits = {
@@ -190,6 +196,19 @@ resource "lxd_instance" "nomad_client" {
     })
     "security.nesting"    = true
     "security.privileged" = true
-    "raw.lxc"             = local.nomad_client_raw_lxc
+    "raw.lxc"             = <<-EOT
+      lxc.apparmor.profile=unconfined
+      lxc.cgroup.devices.allow=a
+      lxc.cap.drop=
+    EOT
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      host        = self.ipv4_address
+      user        = "ubuntu"
+      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+    }
+    inline = ["cloud-init status -w > /dev/null"]
   }
 }

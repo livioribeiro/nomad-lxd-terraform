@@ -31,6 +31,14 @@ consul {
   token = "${consul_token}"
 }
 
+vault {
+  enabled   = true
+  address   = "https://active.vault.service.consul:8200"
+  ca_file   = "/etc/certs.d/ca.pem"
+  cert_file = "/etc/certs.d/cert.pem"
+  key_file  = "/etc/certs.d/key.pem"
+}
+
 telemetry {
   prometheus_metrics         = true
   disable_hostname           = true

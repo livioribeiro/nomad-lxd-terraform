@@ -46,7 +46,7 @@ resource "lxd_instance" "consul_server" {
   for_each = local.consul_servers
 
   name     = each.key
-  image    = "images:ubuntu/${var.ubuntu_version}/cloud/amd64"
+  image    = var.ubuntu_image
   profiles = ["default", lxd_profile.nomad.name]
 
   config = {
@@ -69,7 +69,7 @@ resource "lxd_instance" "consul_server" {
       user        = "ubuntu"
       private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
     }
-    inline = ["echo 1"]
+    inline = ["cloud-init status -w > /dev/null"]
   }
 }
 
@@ -97,7 +97,7 @@ resource "null_resource" "ansible_consul" {
   ]
 
   provisioner "local-exec" {
-    command = "./.venv/bin/ansible-playbook ansible/playbook-consul.yml"
+    command = ".venv/bin/ansible-playbook ansible/playbook-consul.yml"
   }
 }
 
@@ -137,4 +137,29 @@ resource "null_resource" "consul_server_agent_token" {
       "consul acl set-agent-token -token ${data.local_sensitive_file.consul_root_token.content} agent ${data.consul_acl_token_secret_id.consul_server[each.key].secret_id}"
     ]
   }
+}
+
+resource "consul_acl_policy" "anonymous_dns" {
+  name = "anonymous-dns"
+  rules = <<-EOT
+    # allow access to metrics
+    agent_prefix "consul-server-" {
+      policy = "read"
+    }
+
+    # allow dns queries
+    node_prefix "" {
+      policy = "read"
+    }
+
+    service_prefix "" {
+      policy = "read"
+  }
+  EOT
+}
+
+resource "consul_acl_token_policy_attachment" "anonymous_dns" {
+  # anonymous token
+  token_id = "00000000-0000-0000-0000-000000000002"
+  policy   = "${consul_acl_policy.anonymous_dns.name}"
 }

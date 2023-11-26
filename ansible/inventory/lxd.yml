@@ -1,0 +1,5 @@
+# plugin: community.general.lxd
+# groupby:
+#   testPattern:
+#     type: pattern
+#     attribute: ubuntu

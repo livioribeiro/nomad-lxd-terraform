@@ -8,12 +8,21 @@ data "cloudinit_config" "nfs_server" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      packages            = ["openssh-server", "nfs-kernel-server"]
-      runcmd              = ["mkdir /srv/nomad"]
+      packages            = [
+        "openssh-server",
+        "nfs-kernel-server",
+      ]
+      runcmd              = [
+        "mkdir /srv/nomad",
+        "systemctl enable nfs-server",
+        "systemctl start nfs-server",
+        "exportfs -a",
+      ]
       write_files = [
         {
           path    = "/etc/exports"
           content = "/srv/nomad *(rw,sync,no_subtree_check,no_root_squash)"
+          defer   = true
         }
       ]
     })
@@ -22,11 +31,11 @@ data "cloudinit_config" "nfs_server" {
 
 resource "lxd_instance" "nfs_server" {
   name     = local.nfs_server["name"]
-  image    = "images:ubuntu/${var.ubuntu_version}/cloud"
+  image    = var.ubuntu_image
   profiles = ["default", lxd_profile.nomad.name]
 
   config = {
-    "cloud-init.user-data" = data.cloudinit_config.load_balancer.rendered
+    "cloud-init.user-data" = data.cloudinit_config.nfs_server.rendered
     "cloud-init.network-config" = yamlencode({
       version = 2
       ethernets = {
@@ -39,5 +48,14 @@ resource "lxd_instance" "nfs_server" {
     })
     "security.privileged" = true
     "raw.apparmor"        = "mount fstype=rpc_pipefs, mount fstype=nfsd,"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      host        = self.ipv4_address
+      user        = "ubuntu"
+      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+    }
+    inline = ["cloud-init status -w > /dev/null"]
   }
 }
