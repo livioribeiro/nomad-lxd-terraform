@@ -133,7 +133,7 @@ scrape_configs:
 
     tls_config:
       insecure_skip_verify: true
-      # ca_file: {{ env "NOMAD_SECRETS_DIR" }}/ca.pem
+      ca_file: {{ env "NOMAD_SECRETS_DIR" }}/ca.pem
       cert_file: {{ env "NOMAD_SECRETS_DIR" }}/cert.pem
       key_file: {{ env "NOMAD_SECRETS_DIR" }}/key.pem
 
@@ -175,7 +175,7 @@ scrape_configs:
 
     tls_config:
       insecure_skip_verify: true
-      # ca_file: {{ env "NOMAD_SECRETS_DIR" }}/ca.pem
+      ca_file: {{ env "NOMAD_SECRETS_DIR" }}/ca.pem
       cert_file: {{ env "NOMAD_SECRETS_DIR" }}/cert.pem
       key_file: {{ env "NOMAD_SECRETS_DIR" }}/key.pem
 

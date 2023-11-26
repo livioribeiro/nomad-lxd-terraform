@@ -8,11 +8,11 @@ data "cloudinit_config" "nfs_server" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      packages            = [
+      packages = [
         "openssh-server",
         "nfs-kernel-server",
       ]
-      runcmd              = [
+      runcmd = [
         "mkdir /srv/nomad",
         "systemctl enable nfs-server",
         "systemctl start nfs-server",

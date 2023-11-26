@@ -140,7 +140,7 @@ resource "null_resource" "consul_server_agent_token" {
 }
 
 resource "consul_acl_policy" "anonymous_dns" {
-  name = "anonymous-dns"
+  name  = "anonymous-dns"
   rules = <<-EOT
     # allow access to metrics
     agent_prefix "consul-server-" {
@@ -161,5 +161,5 @@ resource "consul_acl_policy" "anonymous_dns" {
 resource "consul_acl_token_policy_attachment" "anonymous_dns" {
   # anonymous token
   token_id = "00000000-0000-0000-0000-000000000002"
-  policy   = "${consul_acl_policy.anonymous_dns.name}"
+  policy   = consul_acl_policy.anonymous_dns.name
 }

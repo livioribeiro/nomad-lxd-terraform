@@ -41,7 +41,6 @@ data "consul_acl_token_secret_id" "vault_server" {
 }
 
 data "cloudinit_config" "vault_server" {
-  depends_on = [ lxd_instance.consul_server ]
   for_each = local.vault_servers
 
   gzip          = false

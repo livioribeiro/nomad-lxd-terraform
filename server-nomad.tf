@@ -187,7 +187,6 @@ data "cloudinit_config" "nomad_server" {
 }
 
 resource "lxd_instance" "nomad_server" {
-  depends_on = [ lxd_instance.consul_server ]
   for_each = local.nomad_servers
 
   name     = each.key
