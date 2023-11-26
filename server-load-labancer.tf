@@ -11,8 +11,8 @@ data "cloudinit_config" "load_balancer" {
       packages            = ["openssh-server", "haproxy"]
       write_files = [
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
-        { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.consul.cert_pem },
-        { path = "/etc/certs.d/cert.pem.key", content = tls_private_key.consul.private_key_pem },
+        { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.load_balancer.cert_pem },
+        { path = "/etc/certs.d/cert.pem.key", content = tls_private_key.load_balancer.private_key_pem },
         {
           path = "/etc/haproxy/haproxy.cfg"
           content = templatefile("cloud-init/haproxy.cfg", {

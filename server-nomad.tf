@@ -149,6 +149,9 @@ data "cloudinit_config" "nomad_server" {
         "systemctl enable consul nomad",
         "systemctl start consul nomad",
         "systemctl restart systemd-resolved",
+        "ln -s /etc/certs.d/ca.pem /usr/local/share/ca-certificates/nomad-cluster.crt",
+        "update-ca-certificates",
+        "echo '${local.load_balancer["host"]} vault.${var.external_domain}' >> /etc/hosts"
       ]
       write_files = [
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },

@@ -213,8 +213,14 @@ resource "tls_private_key" "load_balancer" {
 
 resource "tls_cert_request" "load_balancer" {
   private_key_pem = tls_private_key.load_balancer.private_key_pem
-  dns_names       = ["load-balancer"]
-  ip_addresses    = ["127.0.0.1"]
+  dns_names = [
+    "load-balancer",
+    "consul.${var.external_domain}",
+    "vault.${var.external_domain}",
+    "nomad.${var.external_domain}",
+    "${var.apps_subdomain}.${var.external_domain}"
+  ]
+  ip_addresses = ["127.0.0.1"]
 
   subject {
     common_name  = "example.com"
@@ -231,6 +237,7 @@ resource "tls_locally_signed_cert" "load_balancer" {
 
   allowed_uses = [
     "client_auth",
+    "server_auth",
   ]
 }
 
