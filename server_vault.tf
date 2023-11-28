@@ -81,7 +81,7 @@ data "cloudinit_config" "vault_server" {
         },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
-            "cloud-init/consul-client.hcl", {
+            "config/consul-client.hcl", {
               consul_servers = values(local.consul_servers)
               encrypt_key    = random_id.consul_encrypt_key.b64_std
               agent_token    = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
@@ -90,7 +90,7 @@ data "cloudinit_config" "vault_server" {
         },
         {
           path = "/etc/vault.d/vault.hcl", content = templatefile(
-            "cloud-init/vault.hcl", {
+            "config/vault.hcl", {
               hostname      = each.key
               vault_servers = local.vault_servers
               consul_token  = data.consul_acl_token_secret_id.vault_server[each.key].secret_id
@@ -132,21 +132,6 @@ resource "lxd_instance" "vault_server" {
   }
 }
 
-resource "ansible_group" "vault_servers" {
-  name = "vault_servers"
-}
-
-resource "ansible_host" "vault_server" {
-  for_each = local.vault_servers
-
-  name   = each.key
-  groups = [ansible_group.vault_servers.name]
-
-  variables = {
-    ansible_host = each.value
-  }
-}
-
 resource "null_resource" "ansible_vault" {
   depends_on = [
     lxd_instance.vault_server,
@@ -162,5 +147,5 @@ resource "null_resource" "ansible_vault" {
 
 data "local_sensitive_file" "vault_root_token" {
   depends_on = [null_resource.ansible_vault]
-  filename   = ".tmp/ansible/root_token_vault.txt"
+  filename   = ".tmp/root_token_vault.txt"
 }

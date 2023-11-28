@@ -16,5 +16,5 @@
   run_once: true
   ansible.builtin.copy:
     content: '{{ "root_token" | extract(init_result.stdout | from_json) }}'
-    dest: '{{ playbook_dir }}/../.tmp/ansible/root_token_vault.txt'
+    dest: '{{ playbook_dir }}/../.tmp/root_token_vault.txt'
     mode: "0644"

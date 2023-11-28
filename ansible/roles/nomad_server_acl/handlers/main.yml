@@ -4,5 +4,5 @@
   connection: local
   ansible.builtin.copy:
     content: '{{ acl_bootstrap_result.stdout }}'
-    dest: '{{ playbook_dir }}/../.tmp/ansible/root_token_nomad.txt'
+    dest: '{{ playbook_dir }}/../.tmp/root_token_nomad.txt'
     mode: "0644"

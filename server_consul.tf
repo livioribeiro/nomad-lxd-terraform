@@ -31,7 +31,7 @@ data "cloudinit_config" "consul_server" {
         { path = "/etc/certs.d/key.pem", content = tls_private_key.consul.private_key_pem },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
-            "cloud-init/consul-server.hcl", {
+            "config/consul-server.hcl", {
               consul_servers = values(local.consul_servers)
               encrypt_key    = random_id.consul_encrypt_key.b64_std
             }
@@ -72,21 +72,6 @@ resource "lxd_instance" "consul_server" {
   }
 }
 
-resource "ansible_group" "consul_servers" {
-  name = "consul_servers"
-}
-
-resource "ansible_host" "consul_server" {
-  for_each = local.consul_servers
-
-  name   = each.key
-  groups = [ansible_group.consul_servers.name]
-
-  variables = {
-    ansible_host = each.value
-  }
-}
-
 resource "null_resource" "ansible_consul" {
   depends_on = [
     lxd_instance.consul_server,
@@ -102,7 +87,7 @@ resource "null_resource" "ansible_consul" {
 
 data "local_sensitive_file" "consul_root_token" {
   depends_on = [null_resource.ansible_consul]
-  filename   = ".tmp/ansible/root_token_consul.txt"
+  filename   = ".tmp/root_token_consul.txt"
 }
 
 resource "consul_acl_token" "consul_server" {

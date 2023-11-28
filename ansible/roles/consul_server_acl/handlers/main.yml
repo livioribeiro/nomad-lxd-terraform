@@ -4,5 +4,5 @@
   connection: local
   ansible.builtin.copy:
     content: '{{ "SecretID" | extract(consul_acl_bootstrap.stdout | from_json) }}'
-    dest: '{{ playbook_dir }}/../.tmp/ansible/root_token_consul.txt'
+    dest: '{{ playbook_dir }}/../.tmp/root_token_consul.txt'
     mode: "0644"

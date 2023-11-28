@@ -9,10 +9,12 @@ After deploying, the following urls will be available:
 - http://traefik.localhost
 - http://nomad.localhost
 - http://consul.localhost
+- http://vault.localhost
 
 The cluster contains the following nodes:
 
 - 3 Consul nodes
+- 3 Vault nodes
 - 3 Nomad server nodes
 - 5 Nomad client nodes (3 "apps" nodes, 2 "infra" node)
 - 1 NFS server node
@@ -24,7 +26,7 @@ The client infra nodes are the entrypoint of the cluster in which Traefik will b
 and use Consul service catalog to expose applications.
 
 HAProxy is configured to load balance between the two infra nodes. The container will map
-port 80 on the host in order to expose the services under `*.localhost`.
+ports 80 and 443 on the host in order to expose the services under `*.localhost`.
 
 The proxy configuration exposes the services at `{{ service name }}.apps.localhost`.
 

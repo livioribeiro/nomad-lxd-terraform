@@ -149,7 +149,7 @@ data "cloudinit_config" "nomad_client" {
         },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
-            "cloud-init/consul-client.hcl", {
+            "config/consul-client.hcl", {
               consul_servers = values(local.consul_servers)
               encrypt_key    = random_id.consul_encrypt_key.b64_std
               agent_token    = data.consul_acl_token_secret_id.nomad_client_agent[each.key].secret_id
@@ -158,7 +158,7 @@ data "cloudinit_config" "nomad_client" {
         },
         {
           path = "/etc/nomad.d/nomad.hcl", content = templatefile(
-            "cloud-init/nomad-client.hcl", {
+            "config/nomad-client.hcl", {
               node_pool    = local.nomad_node_pool[each.key]
               consul_token = data.consul_acl_token_secret_id.nomad_client[each.key].secret_id
             }

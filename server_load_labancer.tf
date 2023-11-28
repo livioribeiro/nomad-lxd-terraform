@@ -15,7 +15,7 @@ data "cloudinit_config" "load_balancer" {
         { path = "/etc/certs.d/cert.pem.key", content = tls_private_key.load_balancer.private_key_pem },
         {
           path = "/etc/haproxy/haproxy.cfg"
-          content = templatefile("cloud-init/haproxy.cfg", {
+          content = templatefile("config/haproxy.cfg", {
             external_domain     = var.external_domain
             consul_servers      = local.consul_servers
             vault_servers       = local.vault_servers

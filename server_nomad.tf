@@ -168,7 +168,7 @@ data "cloudinit_config" "nomad_server" {
         },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
-            "cloud-init/consul-client.hcl", {
+            "config/consul-client.hcl", {
               consul_servers = values(local.consul_servers)
               encrypt_key    = random_id.consul_encrypt_key.b64_std
               agent_token    = data.consul_acl_token_secret_id.nomad_server_agent[each.key].secret_id
@@ -177,7 +177,7 @@ data "cloudinit_config" "nomad_server" {
         },
         {
           path = "/etc/nomad.d/nomad.hcl", content = templatefile(
-            "cloud-init/nomad-server.hcl", {
+            "config/nomad-server.hcl", {
               encrypt_key  = random_id.nomad_encrypt_key.b64_std
               consul_token = data.consul_acl_token_secret_id.nomad_server[each.key].secret_id
               vault_token  = vault_token.nomad_server.client_token
@@ -219,21 +219,6 @@ resource "lxd_instance" "nomad_server" {
   }
 }
 
-resource "ansible_group" "nomad_servers" {
-  name = "nomad_servers"
-}
-
-resource "ansible_host" "nomad_server" {
-  for_each = local.nomad_servers
-
-  name   = each.key
-  groups = [ansible_group.nomad_servers.name]
-
-  variables = {
-    ansible_host = each.value
-  }
-}
-
 resource "null_resource" "ansible_nomad_server" {
   depends_on = [
     lxd_instance.nomad_server,
@@ -249,5 +234,5 @@ resource "null_resource" "ansible_nomad_server" {
 
 data "local_sensitive_file" "nomad_root_token" {
   depends_on = [null_resource.ansible_nomad_server]
-  filename   = ".tmp/ansible/root_token_nomad.txt"
+  filename   = ".tmp/root_token_nomad.txt"
 }
