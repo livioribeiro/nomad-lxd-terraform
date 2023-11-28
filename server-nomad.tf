@@ -194,20 +194,19 @@ resource "lxd_instance" "nomad_server" {
 
   name     = each.key
   image    = var.ubuntu_image
-  profiles = ["default", lxd_profile.nomad.name]
+
+  device {
+    name = "eth0"
+    type = "nic"
+
+    properties = {
+      network = lxd_network.nomad.name
+      "ipv4.address" = each.value
+    }
+  }
 
   config = {
     "cloud-init.user-data" = data.cloudinit_config.nomad_server[each.key].rendered
-    "cloud-init.network-config" = yamlencode({
-      version = 2
-      ethernets = {
-        eth0 = {
-          addresses   = ["${each.value}/16"]
-          routes      = [{ to = "default", via = local.gateway_address }]
-          nameservers = { addresses = ["9.9.9.9", "149.112.112.112"] }
-        }
-      }
-    })
   }
 
   provisioner "remote-exec" {

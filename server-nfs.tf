@@ -32,20 +32,19 @@ data "cloudinit_config" "nfs_server" {
 resource "lxd_instance" "nfs_server" {
   name     = local.nfs_server["name"]
   image    = var.ubuntu_image
-  profiles = ["default", lxd_profile.nomad.name]
+
+  device {
+    name = "eth0"
+    type = "nic"
+
+    properties = {
+      network = lxd_network.nomad.name
+      "ipv4.address" = local.nfs_server["host"]
+    }
+  }
 
   config = {
     "cloud-init.user-data" = data.cloudinit_config.nfs_server.rendered
-    "cloud-init.network-config" = yamlencode({
-      version = 2
-      ethernets = {
-        eth0 = {
-          addresses   = ["${local.nfs_server["host"]}/16"]
-          routes      = [{ to = "default", via = local.gateway_address }]
-          nameservers = { addresses = ["9.9.9.9", "149.112.112.112"] }
-        }
-      }
-    })
     "security.privileged" = true
     "raw.apparmor"        = "mount fstype=rpc_pipefs, mount fstype=nfsd,"
   }

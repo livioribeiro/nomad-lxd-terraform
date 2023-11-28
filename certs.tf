@@ -218,9 +218,9 @@ resource "tls_cert_request" "load_balancer" {
     "consul.${var.external_domain}",
     "vault.${var.external_domain}",
     "nomad.${var.external_domain}",
-    "${var.apps_subdomain}.${var.external_domain}"
+    "*.${var.apps_subdomain}.${var.external_domain}"
   ]
-  ip_addresses = ["127.0.0.1"]
+  ip_addresses = ["127.0.0.1", local.load_balancer["host"]]
 
   subject {
     common_name  = "example.com"

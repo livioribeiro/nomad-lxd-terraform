@@ -33,18 +33,18 @@ resource "lxd_instance" "load_balancer" {
   image    = var.ubuntu_image
   profiles = ["default", lxd_profile.nomad.name]
 
+  device {
+    name = "eth0"
+    type = "nic"
+
+    properties = {
+      network = lxd_network.nomad.name
+      "ipv4.address" = local.load_balancer["host"]
+    }
+  }
+
   config = {
     "cloud-init.user-data" = data.cloudinit_config.load_balancer.rendered
-    "cloud-init.network-config" = yamlencode({
-      version = 2
-      ethernets = {
-        eth0 = {
-          addresses   = ["${local.load_balancer["host"]}/16"]
-          routes      = [{ to = "default", via = local.gateway_address }]
-          nameservers = { addresses = ["9.9.9.9", "149.112.112.112"] }
-        }
-      }
-    })
   }
 
   device {
