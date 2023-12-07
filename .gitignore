@@ -38,3 +38,4 @@ override.tf.json
 .tmp/
 .venv/
 .vscode/
+.idea/

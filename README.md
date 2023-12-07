@@ -30,6 +30,13 @@ ports 80 and 443 on the host in order to expose the services under `*.localhost`
 
 The proxy configuration exposes the services at `{{ service name }}.apps.localhost`.
 
+## Nomad ACL authentication
+
+Nomad will be configured with authentication from Vault and a Keycloak instance deployed as a service.
+
+There will be 2 users on both authentication mechanism: `admin` and `operator`,
+with passwords equal to their respective usernames.
+
 ## NFS and CSI Plugin
 
 For storage with the NFS node, a CSI plugin will be configured using the [RocketDuck CSI plugin](https://gitlab.com/rocketduck/csi-plugin-nfs).

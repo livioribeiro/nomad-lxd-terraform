@@ -7,10 +7,10 @@ resource "null_resource" "setup_ansible" {
     EOT
   }
 
-  # provisioner "local-exec" {
-  #   when    = destroy
-  #   command = "rm -r .venv .tmp/ansible"
-  # }
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -r .venv .tmp/root_token_*.txt || true"
+  }
 }
 
 resource "ansible_group" "consul_servers" {

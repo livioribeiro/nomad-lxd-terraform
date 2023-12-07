@@ -2,48 +2,14 @@ job "countdash" {
   group "api" {
     network {
       mode = "bridge"
-
-      port "envoy_metrics" {
-        to = 9102
-      }
-    }
-
-    scaling {
-      enabled = true
-      min     = 1
-      max     = 20
-
-      policy {
-        cooldown = "20s"
-
-        check "cpu" {
-          source = "prometheus"
-          query  = "nomad_client_allocs_cpu_total_percent{exported_job='countdash', task_group='api', task='api'}"
-
-          strategy "threshold" {
-            upper_bound = 0.1
-            delta = 1
-          }
-        }
-      }
     }
 
     service {
       name = "count-api"
       port = "9001"
 
-      meta {
-        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
-      }
-
       connect {
-        sidecar_service {
-          proxy {
-            config {
-              envoy_prometheus_bind_addr = "0.0.0.0:9102"
-            }
-          }
-        }
+        sidecar_service {}
 
         sidecar_task {
           resources {

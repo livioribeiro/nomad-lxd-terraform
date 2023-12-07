@@ -17,7 +17,7 @@
 - name: Read vault init
   when: vault_status["sealed"]
   ansible.builtin.set_fact:
-    vault_init: '{{ lookup("file", "{{ playbook_dir }}/../.tmp/ansible/vault_init.json") | from_json }}'
+    vault_init: '{{ lookup("file", "{{ playbook_dir }}/../.tmp/vault_init.json") | from_json }}'
 
 - name: Unseal vault
   when: vault_status["sealed"]

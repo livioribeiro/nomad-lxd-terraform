@@ -10,21 +10,21 @@ resource "vault_auth_backend" "userpass" {
   type = "userpass"
 }
 
-# resource "null_resource" "userpass_users" {
-#   depends_on = [vault_auth_backend.userpass]
-#   for_each   = toset(["admin", "operator"])
+resource "null_resource" "userpass_users" {
+  depends_on = [vault_auth_backend.userpass]
+  for_each   = toset(["admin", "operator"])
 
-#   provisioner "local-exec" {
-#     environment = {
-#       VAULT_ADDR        = var.vault_address
-#       VAULT_TOKEN       = var.vault_token
-#       VAULT_CACERT      = "../.tmp/certs/ca/cert.pem"
-#       VAULT_CLIENT_CERT = "../.tmp/certs/vault/cert.pem"
-#       VAULT_CLIENT_KEY  = "../.tmp/certs/vault/key.pem"
-#     }
-#     command = "vault write auth/userpass/users/${each.key} password=${each.key}"
-#   }
-# }
+  provisioner "local-exec" {
+    environment = {
+      VAULT_ADDR        = "https://${lxd_instance.vault_server["vault-server-1"].ipv4_address}:8200"
+      VAULT_TOKEN       = data.local_sensitive_file.vault_root_token.content
+      VAULT_CACERT      = local_file.cluster_ca_cert.filename
+      VAULT_CLIENT_CERT = local_file.vault_cert.filename
+      VAULT_CLIENT_KEY  = local_sensitive_file.vault_key.filename
+    }
+    command = "vault write auth/userpass/users/${each.key} password=${each.key}"
+  }
+}
 
 resource "vault_identity_entity_alias" "admin" {
   name           = "admin"

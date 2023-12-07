@@ -6,7 +6,7 @@
   run_once: true
   ansible.builtin.copy:
     content: '{{ init_result.stdout }}'
-    dest: '{{ playbook_dir }}/../.tmp/ansible/vault_init.json'
+    dest: '{{ playbook_dir }}/../.tmp/vault_init.json'
     mode: "0644"
 
 - name: Save vault root token

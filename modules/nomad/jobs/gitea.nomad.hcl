@@ -25,7 +25,6 @@ variable "database_volume_name" {
 
 job "gitea" {
   type      = "service"
-  node_pool = "all"
   namespace = var.namespace
 
   group "app" {

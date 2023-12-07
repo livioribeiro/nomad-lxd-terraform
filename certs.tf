@@ -137,6 +137,16 @@ resource "tls_locally_signed_cert" "vault" {
   ]
 }
 
+resource "local_file" "vault_cert" {
+  filename = "${path.module}/.tmp/certs/vault/cert.pem"
+  content  = tls_locally_signed_cert.vault.cert_pem
+}
+
+resource "local_sensitive_file" "vault_key" {
+  filename = "${path.module}/.tmp/certs/vault/key.pem"
+  content  = tls_private_key.vault.private_key_pem
+}
+
 # Nomad Server
 resource "tls_private_key" "nomad_server" {
   algorithm = "RSA"

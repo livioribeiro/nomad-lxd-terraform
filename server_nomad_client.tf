@@ -10,7 +10,7 @@ locals {
   nomad_clients = merge(local.nomad_infra_clients, local.nomad_apps_clients)
   nomad_node_pool = merge(
     { for s, _ in local.nomad_infra_clients : s => "infra" },
-    { for s, _ in local.nomad_apps_clients : s => "apps" },
+    { for s, _ in local.nomad_apps_clients : s => "default" },
   )
 }
 
