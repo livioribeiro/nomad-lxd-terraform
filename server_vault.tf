@@ -65,6 +65,7 @@ data "cloudinit_config" "vault_server" {
         "systemctl enable consul vault",
         "systemctl start consul vault",
         "systemctl restart systemd-resolved",
+        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
@@ -85,6 +86,7 @@ data "cloudinit_config" "vault_server" {
               consul_servers = values(local.consul_servers)
               encrypt_key    = random_id.consul_encrypt_key.b64_std
               agent_token    = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
+              network_interface = "eth0"
             }
           )
         },
@@ -142,6 +144,10 @@ resource "null_resource" "ansible_vault" {
 
   provisioner "local-exec" {
     command = ".venv/bin/ansible-playbook ansible/playbook-vault.yml"
+  }
+
+  triggers = {
+    id = uuid()
   }
 }
 

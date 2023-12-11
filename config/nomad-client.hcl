@@ -2,8 +2,9 @@ data_dir = "/opt/nomad/data"
 
 client {
   enabled           = true
-  network_interface = "eth0"
+  network_interface = "enp5s0"
   node_pool         = "${node_pool}"
+  cpu_total_compute = 4000
 
   host_volume "docker-socket" {
     path      = "/run/docker.sock"
@@ -32,11 +33,12 @@ consul {
 }
 
 vault {
-  enabled   = true
-  address   = "https://active.vault.service.consul:8200"
-  ca_file   = "/etc/certs.d/ca.pem"
-  cert_file = "/etc/certs.d/cert.pem"
-  key_file  = "/etc/certs.d/key.pem"
+  enabled          = true
+  address          = "https://active.vault.service.consul:8200"
+  ca_file          = "/etc/certs.d/ca.pem"
+  cert_file        = "/etc/certs.d/cert.pem"
+  key_file         = "/etc/certs.d/key.pem"
+  create_from_role = "nomad-workloads"
 }
 
 telemetry {
@@ -49,7 +51,16 @@ telemetry {
 plugin "docker" {
   config {
     allow_privileged = true
-    extra_labels = ["job_name", "job_id", "task_group_name", "task_name", "namespace", "node_name", "node_id"]
+    extra_labels = [
+      "job_name",
+      "job_id",
+      "task_group_name",
+      "task_name",
+      "namespace",
+      "node_name",
+      "node_id"
+    ]
+
     logging {
       type = "loki"
       config {

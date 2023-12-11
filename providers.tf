@@ -73,13 +73,14 @@ provider "consul" {
 provider "vault" {
   address          = "https://${lxd_instance.vault_server["vault-server-1"].ipv4_address}:8200"
   token            = data.local_sensitive_file.vault_root_token.content
-  skip_tls_verify  = true
+  ca_cert_file     = ".tmp/certs/ca.pem"
+  # skip_tls_verify  = true
   skip_child_token = true
 }
 
 provider "nomad" {
   address   = "https://${lxd_instance.nomad_server["nomad-server-1"].ipv4_address}:4646"
-  secret_id = data.local_sensitive_file.nomad_root_token.content
+  secret_id = data.local_file.nomad_root_token.content
   ca_pem    = tls_self_signed_cert.nomad_cluster.cert_pem
   cert_pem  = tls_locally_signed_cert.consul.cert_pem
   key_pem   = tls_private_key.consul.private_key_pem

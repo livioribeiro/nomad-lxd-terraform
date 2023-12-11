@@ -8,11 +8,6 @@ variable "namespace" {
   default = "system-monitoring"
 }
 
-variable "consul_token" {
-  type    = string
-  default = ""
-}
-
 job "prometheus" {
   type      = "service"
   node_pool = "infra"
@@ -79,10 +74,11 @@ job "prometheus" {
         CONSUL_ADDR = "${attr.unique.network.ip-address}:8500"
       }
 
+      identity {
+        env = true
+      }
+
       vault {
-        change_mode   = "signal"
-        change_signal = "SIGHUP"
-        policies      = ["tls-policy"]
       }
 
       template {
@@ -128,7 +124,7 @@ scrape_configs:
   - job_name: consul_metrics
     consul_sd_configs:
     - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-      token: '${var.consul_token}'
+      token: '{{ env "NOMAD_TOKEN" }}'
       services: [consul]
 
     tls_config:
@@ -153,7 +149,7 @@ scrape_configs:
   - job_name: vault_metrics
     consul_sd_configs:
     - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-      token: '${var.consul_token}'
+      token: '{{ env "NOMAD_TOKEN" }}'
       services: [vault]
       # tags: [active]
 
@@ -170,7 +166,7 @@ scrape_configs:
   - job_name: nomad_metrics
     consul_sd_configs:
     - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-      token: '${var.consul_token}'
+      token: '{{ env "NOMAD_TOKEN" }}'
       services: [nomad-client, nomad]
 
     tls_config:
@@ -194,7 +190,7 @@ scrape_configs:
   - job_name: nomad_autoscaler
     consul_sd_configs:
     - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-      token: '${var.consul_token}'
+      token: '{{ env "NOMAD_TOKEN" }}'
       services: [autoscaler]
 
     scrape_interval: 5s
@@ -206,14 +202,14 @@ scrape_configs:
   - job_name: traefik_metrics
     consul_sd_configs:
     - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-      token: '${var.consul_token}'
+      token: '{{ env "NOMAD_TOKEN" }}'
       services: [traefik]
 
   # GITEA
   - job_name: gitea_metrics
     consul_sd_configs:
     - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-      token: '${var.consul_token}'
+      token: '{{ env "NOMAD_TOKEN" }}'
       services: [gitea]
 
   # CONSUL CONNECT ENVOY
@@ -221,7 +217,7 @@ scrape_configs:
   - job_name: consul_connect_envoy_metrics
     consul_sd_configs:
       - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-        token: '${var.consul_token}'
+        token: '{{ env "NOMAD_TOKEN" }}'
 
     relabel_configs:
     - source_labels: [__meta_consul_service]

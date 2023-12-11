@@ -142,7 +142,7 @@ data "cloudinit_config" "nomad_client" {
             {
               "dns": ["172.17.0.1"],
               "registry-mirrors": [
-                  "http://docker-hub-mirror.service.consul:5000"
+                "http://docker-hub-mirror.service.consul:5000"
               ]
             }
           EOT
@@ -150,9 +150,10 @@ data "cloudinit_config" "nomad_client" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers = values(local.consul_servers)
-              encrypt_key    = random_id.consul_encrypt_key.b64_std
-              agent_token    = data.consul_acl_token_secret_id.nomad_client_agent[each.key].secret_id
+              consul_servers    = values(local.consul_servers)
+              encrypt_key       = random_id.consul_encrypt_key.b64_std
+              agent_token       = data.consul_acl_token_secret_id.nomad_client_agent[each.key].secret_id
+              network_interface = "enp5s0"
             }
           )
         },
@@ -172,34 +173,27 @@ data "cloudinit_config" "nomad_client" {
 resource "lxd_instance" "nomad_client" {
   for_each = local.nomad_clients
 
-  name     = each.key
-  image    = var.ubuntu_image
-  profiles = ["default", lxd_profile.nomad.name]
+  name  = each.key
+  image = var.ubuntu_image
+  type  = "virtual-machine"
 
   limits = {
-    cpu    = 1
-    memory = "3GB"
+    cpu    = 2
+    memory = startswith(each.key, "nomad-infra-client-") ? "3GB" : "2GB"
   }
 
   device {
-    name = "eth0"
+    name = "enp5s0"
     type = "nic"
 
     properties = {
-      network = lxd_network.nomad.name
+      network        = lxd_network.nomad.name
       "ipv4.address" = each.value
     }
   }
 
   config = {
     "cloud-init.user-data" = data.cloudinit_config.nomad_client[each.key].rendered
-    "security.nesting"    = true
-    "security.privileged" = true
-    "raw.lxc"             = <<-EOT
-      lxc.apparmor.profile=unconfined
-      lxc.cgroup.devices.allow=a
-      lxc.cap.drop=
-    EOT
   }
 
   provisioner "remote-exec" {

@@ -28,13 +28,12 @@ consul {
 }
 
 vault {
-  enabled          = true
-  address          = "https://active.vault.service.consul:8200"
-  ca_file          = "/etc/certs.d/ca.pem"
-  cert_file        = "/etc/certs.d/cert.pem"
-  key_file         = "/etc/certs.d/key.pem"
-  create_from_role = "nomad-cluster"
-  token            = "${vault_token}"
+  enabled = true
+
+  default_identity {
+    aud = ["vault.io"]
+    ttl = "1h"
+  }
 }
 
 

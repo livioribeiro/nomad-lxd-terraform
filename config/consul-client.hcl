@@ -1,17 +1,13 @@
 data_dir       = "/opt/consul"
 server         = false
-advertise_addr = "{{ GetInterfaceIP \"eth0\" }}"
-client_addr    = "127.0.0.1 {{ GetInterfaceIP \"eth0\" }}"
+advertise_addr = "{{ GetInterfaceIP \"${network_interface}\" }}"
+client_addr    = "127.0.0.1"
 
 retry_join = [
   %{~ for addr in consul_servers ~}
   "${addr}",
   %{~ endfor }
 ]
-
-addresses {
-  http = "127.0.0.1"
-}
 
 ports {
   https    = 8501

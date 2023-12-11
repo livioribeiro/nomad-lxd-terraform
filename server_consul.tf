@@ -24,6 +24,7 @@ data "cloudinit_config" "consul_server" {
       runcmd = [
         "systemctl enable consul",
         "systemctl start consul",
+        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },

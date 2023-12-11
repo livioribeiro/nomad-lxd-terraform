@@ -13,11 +13,6 @@ variable "promtail_version" {
   default = "2.9.1"
 }
 
-variable "nomad_token" {
-  type    = string
-  default = ""
-}
-
 job "autoscaler" {
   type      = "service"
   node_pool = "infra"
@@ -117,6 +112,8 @@ job "autoscaler" {
         env = true
       }
 
+      vault {}
+
       config {
         image   = "hashicorp/nomad-autoscaler:${var.version}"
         command = "nomad-autoscaler"
@@ -149,12 +146,6 @@ job "autoscaler" {
       resources {
         cpu    = 100
         memory = 128
-      }
-
-      vault {
-        change_mode   = "signal"
-        change_signal = "SIGHUP"
-        policies      = ["tls-policy"]
       }
 
       template {
