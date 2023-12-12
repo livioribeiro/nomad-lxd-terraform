@@ -181,10 +181,6 @@ job "autoscaler" {
           nomad {
             address = "http://localhost:4646"
             token   = "{{ env "NOMAD_TOKEN" }}"
-            # ca_cert     = "{{ env "NOMAD_SECRETS_DIR" }}/ca.pem"
-            # skip_verify = true
-            # client_cert = "{{ env "NOMAD_SECRETS_DIR" }}/cert.pem"
-            # client_key  = "{{ env "NOMAD_SECRETS_DIR" }}/key.pem"
           }
 
           telemetry {

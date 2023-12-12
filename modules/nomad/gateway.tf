@@ -16,22 +16,12 @@ resource "consul_acl_policy" "traefik" {
   EOT
 }
 resource "consul_acl_role" "traefik" {
-  name        = "traefik"
+  name        = "nomad-${nomad_namespace.system_gateway.name}-tasks"
   description = "Traefik role"
 
   policies = [
     "${consul_acl_policy.traefik.id}"
   ]
-}
-
-resource "consul_acl_token" "traefik" {
-  description = "Traefik acl token"
-  roles       = [consul_acl_role.traefik.name]
-  local       = true
-}
-
-data "consul_acl_token_secret_id" "traefik" {
-  accessor_id = consul_acl_token.traefik.id
 }
 
 resource "nomad_namespace" "system_gateway" {
@@ -48,7 +38,6 @@ resource "nomad_job" "proxy" {
     vars = {
       namespace    = nomad_namespace.system_gateway.name
       proxy_suffix = "${var.apps_subdomain}.${var.external_domain}"
-      consul_token = data.consul_acl_token_secret_id.traefik.secret_id
     }
   }
 }

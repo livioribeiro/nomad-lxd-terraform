@@ -13,11 +13,6 @@ variable "proxy_suffix" {
   default = ""
 }
 
-variable "consul_token" {
-  type    = string
-  default = ""
-}
-
 job "traefik" {
   type      = "system"
   node_pool = "infra"
@@ -64,6 +59,10 @@ job "traefik" {
         memory = 128
       }
 
+      identity {
+        env = true
+      }
+
       template {
         destination     = "local/traefik.yaml"
         left_delimiter  = "[["
@@ -92,7 +91,7 @@ job "traefik" {
               defaultRule: "Host(`{{ normalize .Name }}.${var.proxy_suffix}`)"
               connectAware: true
               endpoint:
-                token: "${var.consul_token}"
+                token: "[[ env "NOMAD_TOKEN" ]]"
         EOF
       }
     }

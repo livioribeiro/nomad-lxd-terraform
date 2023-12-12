@@ -1,5 +1,5 @@
 resource "nomad_namespace" "system_keycloak" {
-  name = "system-keycloak"
+  name = "sso"
 }
 
 resource "nomad_csi_volume" "keycloak_database_data" {

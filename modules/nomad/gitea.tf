@@ -1,5 +1,5 @@
 resource "nomad_namespace" "gitea" {
-  name = "system-gitea"
+  name = "scm"
 }
 
 resource "nomad_csi_volume" "gitea_data" {

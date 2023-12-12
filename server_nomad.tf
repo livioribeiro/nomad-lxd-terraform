@@ -164,7 +164,7 @@ resource "null_resource" "ansible_nomad_server" {
   }
 }
 
-data "local_file" "nomad_root_token" {
+data "local_sensitive_file" "nomad_root_token" {
   depends_on = [null_resource.ansible_nomad_server]
   filename   = ".tmp/root_token_nomad.txt"
 }

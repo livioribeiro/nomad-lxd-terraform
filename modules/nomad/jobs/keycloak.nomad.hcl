@@ -10,7 +10,7 @@ variable "postgres_version" {
 
 variable "namespace" {
   type    = string
-  default = "system-keycloak"
+  default = "sso"
 }
 
 variable "volume_name" {
