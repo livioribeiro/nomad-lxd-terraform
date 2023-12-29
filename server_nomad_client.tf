@@ -112,7 +112,7 @@ data "cloudinit_config" "nomad_client" {
         "systemctl enable consul nomad docker",
         "systemctl start consul nomad docker",
         "systemctl restart systemd-resolved",
-        "docker plugin install grafana/loki-docker-driver:2.9.2 --alias loki --grant-all-permissions",
+        "docker plugin install grafana/loki-docker-driver:2.9.3 --alias loki --grant-all-permissions",
         "mount --make-shared /",
       ]
       write_files = [

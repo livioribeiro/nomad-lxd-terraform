@@ -25,6 +25,11 @@ tls {
 
 consul {
   token = "${consul_token}"
+
+  service_identity {
+    aud = ["consul.io"]
+    ttl = "1h"
+  }
 }
 
 vault {

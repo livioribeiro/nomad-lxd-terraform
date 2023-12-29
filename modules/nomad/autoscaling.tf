@@ -1,12 +1,10 @@
-## deploying autoscaler in "default" namespace
-## until https://github.com/hashicorp/terraform-provider-nomad/issues/377
-## is solved
-# resource "nomad_namespace" "system_autoscaling" {
-#   name = "system-autoscaling"
-# }
+resource "nomad_namespace" "system_autoscaling" {
+  name = "system-autoscaling"
+}
 
 resource "nomad_acl_policy" "nomad_autoscaler" {
-  name      = "nomad-autoscaler"
+  name        = "nomad-autoscaler"
+  description = "Nomad Autoscaler"
 
   rules_hcl = <<-EOT
     node {
@@ -16,12 +14,21 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
     namespace "*" {
       policy = "scale"
     }
+
+    namespace "${nomad_namespace.system_autoscaling.name}" {
+      policy = "scale"
+
+      variables {
+        path "nomad-autoscaler/lock" {
+          capabilities = ["read", "write", "destroy"]
+        }
+      }
+    }
   EOT
 
   job_acl {
-    ## see nomad_namespace.system_autoscaling above
-    # namespace = nomad_namespace.system_autoscaling.name
-    job_id = "autoscaler"
+    namespace = nomad_namespace.system_autoscaling.name
+    job_id    = "autoscaler"
   }
 }
 
@@ -31,9 +38,7 @@ resource "nomad_job" "autoscaler" {
 
   hcl2 {
     vars = {
-      ## see nomad_namespace.system_autoscaling above
-      # namespace = nomad_namespace.system_autoscaling.name
-      namespace = "default"
+      namespace = nomad_namespace.system_autoscaling.name
     }
   }
 }

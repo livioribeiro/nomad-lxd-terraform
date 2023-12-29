@@ -83,9 +83,9 @@ data "cloudinit_config" "vault_server" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers = values(local.consul_servers)
-              encrypt_key    = random_id.consul_encrypt_key.b64_std
-              agent_token    = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
+              consul_servers    = values(local.consul_servers)
+              encrypt_key       = random_id.consul_encrypt_key.b64_std
+              agent_token       = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
               network_interface = "eth0"
             }
           )
@@ -107,15 +107,15 @@ data "cloudinit_config" "vault_server" {
 resource "lxd_instance" "vault_server" {
   for_each = local.vault_servers
 
-  name     = each.key
-  image    = var.ubuntu_image
+  name  = each.key
+  image = var.ubuntu_image
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network = lxd_network.nomad.name
+      network        = lxd_network.nomad.name
       "ipv4.address" = each.value
     }
   }
@@ -144,10 +144,6 @@ resource "null_resource" "ansible_vault" {
 
   provisioner "local-exec" {
     command = ".venv/bin/ansible-playbook ansible/playbook-vault.yml"
-  }
-
-  triggers = {
-    id = uuid()
   }
 }
 

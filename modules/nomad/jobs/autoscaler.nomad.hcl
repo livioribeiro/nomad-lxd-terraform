@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "0.3.7"
+  default = "0.4.0"
 }
 
 variable "namespace" {
@@ -15,11 +15,11 @@ variable "promtail_version" {
 
 job "autoscaler" {
   type      = "service"
-  node_pool = "infra"
+  node_pool = "all"
   namespace = var.namespace
 
   group "autoscaler" {
-    count = 1
+    count = 3
 
     network {
       mode = "bridge"
@@ -181,6 +181,10 @@ job "autoscaler" {
           nomad {
             address = "http://localhost:4646"
             token   = "{{ env "NOMAD_TOKEN" }}"
+          }
+
+          high_availability {
+            enabled = true
           }
 
           telemetry {

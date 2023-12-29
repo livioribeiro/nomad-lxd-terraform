@@ -46,15 +46,15 @@ data "cloudinit_config" "consul_server" {
 resource "lxd_instance" "consul_server" {
   for_each = local.consul_servers
 
-  name     = each.key
-  image    = var.ubuntu_image
+  name  = each.key
+  image = var.ubuntu_image
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network = lxd_network.nomad.name
+      network        = lxd_network.nomad.name
       "ipv4.address" = each.value
     }
   }
@@ -139,7 +139,7 @@ resource "consul_acl_policy" "anonymous_dns" {
 
     service_prefix "" {
       policy = "read"
-  }
+    }
   EOT
 }
 

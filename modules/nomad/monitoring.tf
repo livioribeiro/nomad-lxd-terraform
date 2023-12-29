@@ -3,8 +3,8 @@ resource "nomad_namespace" "system_monitoring" {
 }
 
 # Prometheus Consul ACL
-resource "consul_acl_policy" "prometheus" {
-  name  = "prometheus"
+resource "consul_acl_policy" "system_monitoring" {
+  name  = "system-monitoring"
   rules = <<-EOT
     agent_prefix "" {
       policy = "read"
@@ -23,13 +23,24 @@ resource "consul_acl_policy" "prometheus" {
     }
   EOT
 }
+
 resource "consul_acl_role" "prometheus" {
-  name        = "nomad-${nomad_namespace.system_monitoring.name}-tasks"
+  name        = "nomad-tasks-${nomad_namespace.system_monitoring.name}"
   description = "prometheus role"
 
   policies = [
-    "${consul_acl_policy.prometheus.id}"
+    consul_acl_policy.system_monitoring.id
   ]
+}
+
+resource "consul_acl_token" "prometheus" {
+  description = "prometheus acl token"
+  roles       = [consul_acl_role.prometheus.name]
+  local       = true
+}
+
+data "consul_acl_token_secret_id" "prometheus" {
+  accessor_id = consul_acl_token.prometheus.id
 }
 
 resource "nomad_job" "prometheus" {
@@ -41,6 +52,7 @@ resource "nomad_job" "prometheus" {
   hcl2 {
     vars = {
       namespace = nomad_namespace.system_monitoring.name
+      consul_token = data.consul_acl_token_secret_id.prometheus.secret_id
     }
   }
 }

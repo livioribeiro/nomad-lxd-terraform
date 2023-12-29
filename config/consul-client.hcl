@@ -1,7 +1,7 @@
 data_dir       = "/opt/consul"
 server         = false
 advertise_addr = "{{ GetInterfaceIP \"${network_interface}\" }}"
-client_addr    = "127.0.0.1"
+client_addr    = "127.0.0.1 {{ GetInterfaceIP \"${network_interface}\" }}"
 
 retry_join = [
   %{~ for addr in consul_servers ~}

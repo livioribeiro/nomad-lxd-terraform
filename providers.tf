@@ -50,10 +50,10 @@ terraform {
       version = "~> 3.23"
     }
 
-    # nomad = {
-    #   source = "hashicorp/nomad"
-    #   version = "~> 2.0"
-    # }
+    nomad = {
+      source  = "hashicorp/nomad"
+      version = "~> 2.1"
+    }
   }
 }
 
@@ -74,7 +74,6 @@ provider "vault" {
   address          = "https://${lxd_instance.vault_server["vault-server-1"].ipv4_address}:8200"
   token            = data.local_sensitive_file.vault_root_token.content
   ca_cert_file     = ".tmp/certs/ca.pem"
-  # skip_tls_verify  = true
   skip_child_token = true
 }
 

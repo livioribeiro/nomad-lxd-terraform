@@ -38,7 +38,7 @@ resource "lxd_instance" "load_balancer" {
     type = "nic"
 
     properties = {
-      network = lxd_network.nomad.name
+      network        = lxd_network.nomad.name
       "ipv4.address" = local.load_balancer["host"]
     }
   }

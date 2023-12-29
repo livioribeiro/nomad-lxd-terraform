@@ -8,11 +8,11 @@ resource "nomad_acl_auth_method" "keycloak" {
   default        = false
 
   config {
-    oidc_discovery_url    = "https://keycloak.${var.apps_subdomain}.${var.external_domain}/realms/nomad"
-    oidc_client_id        = "nomad"
-    oidc_client_secret    = "nomad-oidc-authentication-secret"
-    oidc_scopes           = ["groups"]
-    bound_audiences       = ["nomad"]
+    oidc_discovery_url = "https://keycloak.${var.apps_subdomain}.${var.external_domain}/realms/nomad"
+    oidc_client_id     = "nomad"
+    oidc_client_secret = "nomad-oidc-authentication-secret"
+    oidc_scopes        = ["groups"]
+    bound_audiences    = ["nomad"]
     allowed_redirect_uris = [
       "http://localhost:4649/oidc/callback",
       "http://nomad.${var.external_domain}/ui/settings/tokens",

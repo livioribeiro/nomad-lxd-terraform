@@ -1,14 +1,13 @@
 ---
-- name: Wait for Vault to fully initialize
-  ansible.builtin.wait_for:
-    timeout: 30
-
 - name: Check vault status
   ansible.builtin.command: |-
     vault status -tls-skip-verify -format=json
   register: vault_status_result
   changed_when: false
   failed_when: vault_status_result.rc not in [0, 2]
+  until: vault_status_result.rc in [0, 2]
+  retries: 10
+  delay: 3
 
 - name: Parse vault status
   ansible.builtin.set_fact:

@@ -30,23 +30,23 @@ data "cloudinit_config" "nfs_server" {
 }
 
 resource "lxd_instance" "nfs_server" {
-  name     = local.nfs_server["name"]
-  image    = var.ubuntu_image
+  name  = local.nfs_server["name"]
+  image = var.ubuntu_image
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network = lxd_network.nomad.name
+      network        = lxd_network.nomad.name
       "ipv4.address" = local.nfs_server["host"]
     }
   }
 
   config = {
     "cloud-init.user-data" = data.cloudinit_config.nfs_server.rendered
-    "security.privileged" = true
-    "raw.apparmor"        = "mount fstype=rpc_pipefs, mount fstype=nfsd,"
+    "security.privileged"  = true
+    "raw.apparmor"         = "mount fstype=rpc_pipefs, mount fstype=nfsd,"
   }
 
   provisioner "remote-exec" {

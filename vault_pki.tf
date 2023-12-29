@@ -57,8 +57,8 @@ resource "vault_pki_secret_backend_role" "nomad_cluster" {
   allow_subdomains = true
 }
 
-resource "vault_policy" "tls_policy" {
-  name = "tls-policy"
+resource "vault_policy" "tls" {
+  name = "tls"
 
   policy = <<-EOT
     path "pki/issue/${vault_pki_secret_backend_role.nomad_cluster.name}" {

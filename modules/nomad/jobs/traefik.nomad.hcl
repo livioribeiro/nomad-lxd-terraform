@@ -13,6 +13,11 @@ variable "proxy_suffix" {
   default = ""
 }
 
+variable "consul_token" {
+  type    = string
+  default = ""
+}
+
 job "traefik" {
   type      = "system"
   node_pool = "infra"
@@ -59,8 +64,8 @@ job "traefik" {
         memory = 128
       }
 
-      identity {
-        env = true
+      env {
+        PROXY_SUFFIX = var.proxy_suffix
       }
 
       template {
@@ -68,6 +73,8 @@ job "traefik" {
         left_delimiter  = "[["
         right_delimiter = "]]"
         data            = <<-EOF
+          log:
+            level: INFO
           entryPoints:
             http:
               address: ":80"
@@ -88,10 +95,10 @@ job "traefik" {
           providers:
             consulCatalog:
               exposedByDefault: false
-              defaultRule: "Host(`{{ normalize .Name }}.${var.proxy_suffix}`)"
+              defaultRule: "Host(`{{ normalize .Name }}.[[ env "PROXY_SUFFIX" ]]`)"
               connectAware: true
               endpoint:
-                token: "[[ env "NOMAD_TOKEN" ]]"
+                token: "${var.consul_token}"
         EOF
       }
     }

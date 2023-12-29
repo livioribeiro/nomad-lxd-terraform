@@ -4,7 +4,6 @@ client {
   enabled           = true
   network_interface = "enp5s0"
   node_pool         = "${node_pool}"
-  cpu_total_compute = 4000
 
   host_volume "docker-socket" {
     path      = "/run/docker.sock"

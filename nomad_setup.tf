@@ -1,4 +1,4 @@
-module "nomad-consul-setup" {
+module "nomad_consul_setup" {
   depends_on = [
     null_resource.ansible_consul,
     null_resource.ansible_nomad_server,
@@ -9,7 +9,7 @@ module "nomad-consul-setup" {
   nomad_jwks_url = "http://nomad.${var.external_domain}/.well-known/jwks.json"
 }
 
-module "nomad-vault-setup" {
+module "nomad_vault_setup" {
   depends_on = [
     null_resource.ansible_vault,
     null_resource.ansible_nomad_server,
@@ -18,5 +18,30 @@ module "nomad-vault-setup" {
   version = "1.1.0"
 
   nomad_jwks_url = "http://nomad.${var.external_domain}/.well-known/jwks.json"
-  policy_names = [vault_policy.tls_policy.name]
+  policy_names   = ["nomad-workloads", "consul-creds"]
+}
+
+resource "vault_policy" "nomad_workloads" {
+  name   = "nomad-workloads"
+  policy = <<-EOT
+    path "secret/data/{{identity.entity.aliases.${module.nomad_vault_setup.auth_backend_accessor}.metadata.nomad_namespace}}/{{identity.entity.aliases.${module.nomad_vault_setup.auth_backend_accessor}.metadata.nomad_job_id}}/*" {
+      capabilities = ["read"]
+    }
+
+    path "secret/data/{{identity.entity.aliases.${module.nomad_vault_setup.auth_backend_accessor}.metadata.nomad_namespace}}/{{identity.entity.aliases.${module.nomad_vault_setup.auth_backend_accessor}.metadata.nomad_job_id}}" {
+      capabilities = ["read"]
+    }
+
+    path "secret/metadata/{{identity.entity.aliases.${module.nomad_vault_setup.auth_backend_accessor}.metadata.nomad_namespace}}/*" {
+      capabilities = ["list"]
+    }
+
+    path "secret/metadata/*" {
+      capabilities = ["list"]
+    }
+
+    path "pki/issue/${vault_pki_secret_backend_role.nomad_cluster.name}" {
+      capabilities = ["update"] 
+    }
+  EOT
 }

@@ -126,7 +126,7 @@ job "gitea" {
           retries=0
           while ! nc -z localhost 5432
           do
-            if [ $retries -gt 3 ]; then
+            if [ $retries -gt 10 ]; then
               exit 1
             fi
             sleep 3

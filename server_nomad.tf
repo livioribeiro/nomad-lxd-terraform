@@ -77,6 +77,9 @@ data "cloudinit_config" "nomad_server" {
       }
       packages = ["openssh-server", "consul", "nomad"]
       runcmd = [
+        "mkdir -p /opt/nomad/data && chown -R nomad:nomad /opt/nomad",
+        "sed -i '/\\[Service\\]/a User=nomad' /usr/lib/systemd/system/nomad.service",
+        "systemctl daemon-reload",
         "systemctl enable consul nomad",
         "systemctl start consul nomad",
         "systemctl restart systemd-resolved",
@@ -101,9 +104,9 @@ data "cloudinit_config" "nomad_server" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers = values(local.consul_servers)
-              encrypt_key    = random_id.consul_encrypt_key.b64_std
-              agent_token    = data.consul_acl_token_secret_id.nomad_server_agent[each.key].secret_id
+              consul_servers    = values(local.consul_servers)
+              encrypt_key       = random_id.consul_encrypt_key.b64_std
+              agent_token       = data.consul_acl_token_secret_id.nomad_server_agent[each.key].secret_id
               network_interface = "eth0"
             }
           )
@@ -124,15 +127,15 @@ data "cloudinit_config" "nomad_server" {
 resource "lxd_instance" "nomad_server" {
   for_each = local.nomad_servers
 
-  name     = each.key
-  image    = var.ubuntu_image
+  name  = each.key
+  image = var.ubuntu_image
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network = lxd_network.nomad.name
+      network        = lxd_network.nomad.name
       "ipv4.address" = each.value
     }
   }
