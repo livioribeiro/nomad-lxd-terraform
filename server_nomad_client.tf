@@ -170,12 +170,29 @@ data "cloudinit_config" "nomad_client" {
   }
 }
 
+resource "lxd_volume" "nomad_client_data" {
+  for_each = toset(keys(local.nomad_clients))
+
+  name         = "${each.key}-data"
+  pool         = lxd_storage_pool.nomad_cluster.name
+  content_type = "filesystem"
+}
+
+resource "lxd_volume" "nomad_client_docker_data" {
+  for_each = toset(keys(local.nomad_clients))
+
+  name         = "${each.key}-docker-data"
+  pool         = lxd_storage_pool.nomad_cluster.name
+  content_type = "filesystem"
+}
+
 resource "lxd_instance" "nomad_client" {
   for_each = local.nomad_clients
 
-  name  = each.key
-  image = var.ubuntu_image
-  type  = "virtual-machine"
+  name     = each.key
+  image    = var.ubuntu_image
+  type     = "virtual-machine"
+  profiles = [lxd_profile.nomad_cluster.name]
 
   limits = {
     cpu    = 2
@@ -189,6 +206,26 @@ resource "lxd_instance" "nomad_client" {
     properties = {
       network        = lxd_network.nomad.name
       "ipv4.address" = each.value
+    }
+  }
+
+  device {
+    name = "nomad-data"
+    type = "disk"
+    properties = {
+      path   = "/opt/nomad/data"
+      source = lxd_volume.nomad_client_data[each.key].name
+      pool   = lxd_volume.nomad_client_data[each.key].pool
+    }
+  }
+
+  device {
+    name = "docker-data"
+    type = "disk"
+    properties = {
+      path   = "/var/lib/docker"
+      source = lxd_volume.nomad_client_docker_data[each.key].name
+      pool   = lxd_volume.nomad_client_docker_data[each.key].pool
     }
   }
 

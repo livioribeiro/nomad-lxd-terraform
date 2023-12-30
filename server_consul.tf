@@ -43,11 +43,20 @@ data "cloudinit_config" "consul_server" {
   }
 }
 
+resource "lxd_volume" "consul_server_data" {
+  for_each = toset(keys(local.consul_servers))
+
+  name         = "${each.key}-data"
+  pool         = lxd_storage_pool.nomad_cluster.name
+  content_type = "filesystem"
+}
+
 resource "lxd_instance" "consul_server" {
   for_each = local.consul_servers
 
-  name  = each.key
-  image = var.ubuntu_image
+  name     = each.key
+  image    = var.ubuntu_image
+  profiles = [lxd_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
@@ -56,6 +65,16 @@ resource "lxd_instance" "consul_server" {
     properties = {
       network        = lxd_network.nomad.name
       "ipv4.address" = each.value
+    }
+  }
+
+  device {
+    name = "consul-data"
+    type = "disk"
+    properties = {
+      path   = "/opt/consul/data"
+      source = lxd_volume.consul_server_data[each.key].name
+      pool   = lxd_volume.consul_server_data[each.key].pool
     }
   }
 

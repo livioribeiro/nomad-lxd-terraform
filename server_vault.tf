@@ -104,11 +104,20 @@ data "cloudinit_config" "vault_server" {
   }
 }
 
+resource "lxd_volume" "vault_server_data" {
+  for_each = toset(keys(local.vault_servers))
+
+  name         = "${each.key}-data"
+  pool         = lxd_storage_pool.nomad_cluster.name
+  content_type = "filesystem"
+}
+
 resource "lxd_instance" "vault_server" {
   for_each = local.vault_servers
 
-  name  = each.key
-  image = var.ubuntu_image
+  name     = each.key
+  image    = var.ubuntu_image
+  profiles = [lxd_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
@@ -117,6 +126,16 @@ resource "lxd_instance" "vault_server" {
     properties = {
       network        = lxd_network.nomad.name
       "ipv4.address" = each.value
+    }
+  }
+
+  device {
+    name = "vault-data"
+    type = "disk"
+    properties = {
+      path   = "/opt/vault/data"
+      source = lxd_volume.vault_server_data[each.key].name
+      pool   = lxd_volume.vault_server_data[each.key].pool
     }
   }
 

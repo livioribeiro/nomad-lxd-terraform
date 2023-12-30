@@ -31,7 +31,7 @@ data "cloudinit_config" "load_balancer" {
 resource "lxd_instance" "load_balancer" {
   name     = local.load_balancer["name"]
   image    = var.ubuntu_image
-  profiles = ["default", lxd_profile.nomad.name]
+  profiles = [lxd_profile.nomad_cluster.name]
 
   device {
     name = "eth0"

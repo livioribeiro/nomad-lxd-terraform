@@ -43,6 +43,7 @@ vault {
 
 
 telemetry {
+  collection_interval        = "10s"
   prometheus_metrics         = true
   disable_hostname           = true
   publish_allocation_metrics = true

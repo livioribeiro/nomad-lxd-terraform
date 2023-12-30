@@ -12,22 +12,23 @@ resource "lxd_network" "nomad" {
   }
 }
 
-# resource "lxd_storage_pool" "nomad" {
-#   name   = "nomad-cluster"
-#   driver = "dir"
-#   config = {
-#     source = "/var/lxd/storage-pools/nomad-cluster"
-#   }
-# }
+resource "lxd_storage_pool" "nomad_cluster" {
+  name   = "nomad-cluster"
+  driver = "dir"
+  config = {
+    source = "/var/snap/lxd/common/lxd/storage-pools/nomad-cluster"
+  }
+}
 
-resource "lxd_profile" "nomad" {
+resource "lxd_profile" "nomad_cluster" {
   name = "nomad"
 
   device {
-    name = "eth0"
-    type = "nic"
+    name = "root"
+    type = "disk"
     properties = {
-      network = lxd_network.nomad.name
+      path = "/"
+      pool = lxd_storage_pool.nomad_cluster.name
     }
   }
 }
