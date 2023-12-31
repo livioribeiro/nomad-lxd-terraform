@@ -18,7 +18,12 @@ variable "apps_subdomain" {
   default = "apps"
 }
 
-variable "gateway_address" {
-  type    = string
-  default = "10.99.0.1"
+variable "nomad_infra_clients_qtd" {
+  type    = number
+  default = 2
+}
+
+variable "nomad_apps_clients_qtd" {
+  type    = number
+  default = 3
 }

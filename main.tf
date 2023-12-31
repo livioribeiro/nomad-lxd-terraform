@@ -6,9 +6,11 @@ resource "lxd_network" "nomad" {
   name = "nomadlxdbr0"
 
   config = {
-    "ipv4.address" = "10.99.0.1/16"
-    "ipv4.nat"     = "true"
-    "ipv6.address" = "none"
+    "ipv4.address"     = "10.99.0.1/16"
+    "ipv4.nat"         = "true"
+    "ipv4.dhcp.expiry" = "365d"
+    "ipv4.dhcp.ranges" = "10.99.1.1-10.99.1.254"
+    "ipv6.address"     = "none"
   }
 }
 

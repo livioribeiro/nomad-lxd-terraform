@@ -7,15 +7,19 @@ data "http" "getenvoy_gpg" {
 }
 
 locals {
-  nomad_clients = merge(local.nomad_infra_clients, local.nomad_apps_clients)
+  nomad_apps_clients = [
+    for i in range(var.nomad_apps_clients_qtd) :
+    "nomad-apps-client-${i}"
+  ]
+  nomad_clients = concat(keys(local.nomad_infra_clients), local.nomad_apps_clients)
   nomad_node_pool = merge(
     { for s, _ in local.nomad_infra_clients : s => "infra" },
-    { for s, _ in local.nomad_apps_clients : s => "default" },
+    { for s in local.nomad_apps_clients : s => "default" },
   )
 }
 
 resource "consul_acl_token" "nomad_client_agent" {
-  for_each = local.nomad_clients
+  for_each = toset(local.nomad_clients)
 
   node_identities {
     datacenter = "dc1"
@@ -24,7 +28,7 @@ resource "consul_acl_token" "nomad_client_agent" {
 }
 
 data "consul_acl_token_secret_id" "nomad_client_agent" {
-  for_each = local.nomad_clients
+  for_each = toset(local.nomad_clients)
 
   accessor_id = consul_acl_token.nomad_client_agent[each.key].id
 }
@@ -52,20 +56,20 @@ resource "consul_acl_policy" "nomad_client" {
 
 resource "consul_acl_token" "nomad_client" {
   depends_on = [null_resource.ansible_consul]
-  for_each   = local.nomad_clients
+  for_each   = toset(local.nomad_clients)
 
   description = "${each.key} client token"
   policies    = [consul_acl_policy.nomad_client.name]
 }
 
 data "consul_acl_token_secret_id" "nomad_client" {
-  for_each = local.nomad_clients
+  for_each = toset(local.nomad_clients)
 
   accessor_id = consul_acl_token.nomad_client[each.key].id
 }
 
 data "cloudinit_config" "nomad_client" {
-  for_each = local.nomad_clients
+  for_each = toset(local.nomad_clients)
 
   gzip          = false
   base64_encode = false
@@ -170,24 +174,8 @@ data "cloudinit_config" "nomad_client" {
   }
 }
 
-resource "lxd_volume" "nomad_client_data" {
-  for_each = toset(keys(local.nomad_clients))
-
-  name         = "${each.key}-data"
-  pool         = lxd_storage_pool.nomad_cluster.name
-  content_type = "filesystem"
-}
-
-resource "lxd_volume" "nomad_client_docker_data" {
-  for_each = toset(keys(local.nomad_clients))
-
-  name         = "${each.key}-docker-data"
-  pool         = lxd_storage_pool.nomad_cluster.name
-  content_type = "filesystem"
-}
-
 resource "lxd_instance" "nomad_client" {
-  for_each = local.nomad_clients
+  for_each = merge(local.nomad_infra_clients, { for i in local.nomad_apps_clients : i => null })
 
   name     = each.key
   image    = var.ubuntu_image
@@ -206,26 +194,6 @@ resource "lxd_instance" "nomad_client" {
     properties = {
       network        = lxd_network.nomad.name
       "ipv4.address" = each.value
-    }
-  }
-
-  device {
-    name = "nomad-data"
-    type = "disk"
-    properties = {
-      path   = "/opt/nomad/data"
-      source = lxd_volume.nomad_client_data[each.key].name
-      pool   = lxd_volume.nomad_client_data[each.key].pool
-    }
-  }
-
-  device {
-    name = "docker-data"
-    type = "disk"
-    properties = {
-      path   = "/var/lib/docker"
-      source = lxd_volume.nomad_client_docker_data[each.key].name
-      pool   = lxd_volume.nomad_client_docker_data[each.key].pool
     }
   }
 
