@@ -73,7 +73,7 @@ provider "consul" {
 provider "vault" {
   address          = "https://${lxd_instance.vault_server["vault-server-1"].ipv4_address}:8200"
   token            = data.local_sensitive_file.vault_root_token.content
-  ca_cert_file     = ".tmp/certs/ca.pem"
+  ca_cert_file     = local_file.cluster_ca_cert.filename
   skip_child_token = true
 }
 

@@ -16,11 +16,11 @@ resource "null_resource" "userpass_users" {
 
   provisioner "local-exec" {
     environment = {
-      VAULT_ADDR        = "https://${lxd_instance.vault_server["vault-server-1"].ipv4_address}:8200"
-      VAULT_TOKEN       = data.local_sensitive_file.vault_root_token.content
-      VAULT_CACERT      = local_file.cluster_ca_cert.filename
-      VAULT_CLIENT_CERT = local_file.vault_cert.filename
-      VAULT_CLIENT_KEY  = local_sensitive_file.vault_key.filename
+      VAULT_ADDR        = var.vault_url
+      VAULT_TOKEN       = var.vault_token
+      VAULT_CACERT      = var.cacert_path
+      VAULT_CLIENT_CERT = var.vault_cert_path
+      VAULT_CLIENT_KEY  = var.vault_private_key_path
     }
     command = "vault write auth/userpass/users/${each.key} password=${each.key}"
   }

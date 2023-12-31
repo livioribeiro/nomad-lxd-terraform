@@ -54,10 +54,7 @@ data "cloudinit_config" "vault_server" {
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
       apt = {
         sources = {
-          hashicorp = {
-            source = "deb [arch=amd64 signed-by=$KEY_FILE] https://apt.releases.hashicorp.com ${var.ubuntu_version} main"
-            key    = data.http.hashicorp_gpg.response_body
-          }
+          hashicorp = local.cloudinit_apt_hashicorp
         }
       }
       packages = ["openssh-server", "consul", "vault"]
@@ -68,18 +65,10 @@ data "cloudinit_config" "vault_server" {
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
+        local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.vault.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.vault.private_key_pem },
-        {
-          path    = "/etc/systemd/resolved.conf.d/consul.conf",
-          content = <<-EOT
-            [Resolve]
-            DNS=127.0.0.1:8600
-            DNSSEC=false
-            Domains=~consul
-          EOT
-        },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {

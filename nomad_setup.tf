@@ -18,7 +18,7 @@ module "nomad_vault_setup" {
   version = "1.1.0"
 
   nomad_jwks_url = "http://nomad.${var.external_domain}/.well-known/jwks.json"
-  policy_names   = ["nomad-workloads", "consul-creds"]
+  policy_names   = ["nomad-workloads"]
 }
 
 resource "vault_policy" "nomad_workloads" {

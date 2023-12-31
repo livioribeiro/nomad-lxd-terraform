@@ -14,10 +14,7 @@ data "cloudinit_config" "consul_server" {
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
       apt = {
         sources = {
-          hashicorp = {
-            source = "deb [arch=amd64 signed-by=$KEY_FILE] https://apt.releases.hashicorp.com ${var.ubuntu_version} main"
-            key    = data.http.hashicorp_gpg.response_body
-          }
+          hashicorp = local.cloudinit_apt_hashicorp
         }
       }
       packages = ["openssh-server", "consul"]

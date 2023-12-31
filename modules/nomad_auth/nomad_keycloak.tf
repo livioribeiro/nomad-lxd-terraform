@@ -1,6 +1,4 @@
 resource "nomad_acl_auth_method" "keycloak" {
-  depends_on = [module.nomad]
-
   name           = "keycloak"
   type           = "OIDC"
   token_locality = "global"
