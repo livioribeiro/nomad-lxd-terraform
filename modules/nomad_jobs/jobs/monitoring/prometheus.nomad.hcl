@@ -182,9 +182,11 @@ job "prometheus" {
               key_file: {{ env "NOMAD_SECRETS_DIR" }}/key.pem
 
             relabel_configs:
-            - source_labels: ['__meta_consul_tags']
+            - action: keep
+              source_labels: ['__meta_consul_tags']
               regex: '(.*)http(.*)'
-              action: keep
+            - action: labeldrop
+              regex: job
 
             scrape_interval: 5s
             metrics_path: /v1/metrics

@@ -74,7 +74,15 @@ plugin "docker" {
 
         loki-relabel-config = <<-EOT
           - action: labelmap
-            regex: com_hashicorp_(\w+)
+            regex: com_hashicorp_nomad_(\w+)
+          - action: labelmap
+            regex: com_hashicorp_nomad_(job)_name
+          - action: labelmap
+            regex: com_hashicorp_nomad_(task_group)_name
+          - action: labelmap
+            regex: com_hashicorp_nomad_(task)_name
+          - action: labeldrop
+            regex: com_hashicorp_nomad_(\w+)|job_name|job_id|task_group_name|task_group_id|task_name
         EOT
 
         loki-pipeline-stages = <<-EOT
@@ -86,14 +94,6 @@ plugin "docker" {
           - labeldrop:
               - filename
               - host
-              - com_hashicorp_nomad_alloc_id
-              - com_hashicorp_nomad_job_name
-              - com_hashicorp_nomad_job_id
-              - com_hashicorp_nomad_task_group_name
-              - com_hashicorp_nomad_task_name
-              - com_hashicorp_nomad_namespace
-              - com_hashicorp_nomad_node_name
-              - com_hashicorp_nomad_node_id
         EOT
       }
     }
