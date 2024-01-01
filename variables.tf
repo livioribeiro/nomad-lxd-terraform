@@ -8,6 +8,11 @@ variable "ubuntu_image" {
   default = "images:ubuntu/jammy/cloud"
 }
 
+variable "base_network" {
+  type    = string
+  default = "10.99.0.0/16"
+}
+
 variable "external_domain" {
   type    = string
   default = "localhost"

@@ -3,7 +3,9 @@ locals {
     for i in range(1, var.nomad_apps_clients_qtd + 1) :
     "nomad-apps-client-${i}"
   ]
+
   nomad_clients = concat(keys(local.nomad_infra_clients), local.nomad_apps_clients)
+
   nomad_node_pool = merge(
     { for s, _ in local.nomad_infra_clients : s => "infra" },
     { for s in local.nomad_apps_clients : s => "default" },
