@@ -179,8 +179,9 @@ job "autoscaler" {
         destination = "${NOMAD_TASK_DIR}/config.hcl"
         data = <<-EOT
           nomad {
-            address = "http://localhost:4646"
-            token   = "{{ env "NOMAD_TOKEN" }}"
+            address   = "http://localhost:4646"
+            namespace = "*"
+            token     = "{{ env "NOMAD_TOKEN" }}"
           }
 
           high_availability {
