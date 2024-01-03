@@ -76,7 +76,7 @@ plugin "docker" {
           - action: labelmap
             regex: com_hashicorp_nomad_(\w+)
           - action: labelmap
-            regex: com_hashicorp_nomad_(job)_name
+            regex: com_hashicorp_(nomad_job)_name
           - action: labelmap
             regex: com_hashicorp_nomad_(task_group)_name
           - action: labelmap

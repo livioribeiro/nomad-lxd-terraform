@@ -86,6 +86,9 @@ job "prometheus" {
       vault {
       }
 
+      consul {
+      }
+
       template {
         destination = "${NOMAD_SECRETS_DIR}/ca.pem"
         data = <<-EOT
@@ -185,8 +188,9 @@ job "prometheus" {
             - action: keep
               source_labels: ['__meta_consul_tags']
               regex: '(.*)http(.*)'
-            - action: labeldrop
-              regex: job
+            - action: labelmap
+              regex: exported_job
+              replacement: nomad_job
 
             scrape_interval: 5s
             metrics_path: /v1/metrics
