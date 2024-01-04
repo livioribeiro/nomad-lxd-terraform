@@ -12,15 +12,9 @@ data "cloudinit_config" "consul_server" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      apt = {
-        sources = {
-          hashicorp = local.cloudinit_apt_hashicorp
-        }
-      }
-      packages = ["openssh-server", "consul"]
       runcmd = [
-        "systemctl enable consul",
-        "systemctl start consul",
+        "chown -R consul:consul /opt/consul",
+        "systemctl restart consul",
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
@@ -46,13 +40,15 @@ resource "lxd_volume" "consul_server_data" {
   name         = "${each.key}-data"
   pool         = lxd_storage_pool.nomad_cluster.name
   content_type = "filesystem"
+
 }
 
 resource "lxd_instance" "consul_server" {
   for_each = local.consul_servers
+  depends_on = [packer_image.consul]
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = "local:consul"
   profiles = [lxd_profile.nomad_cluster.name]
 
   device {
@@ -68,8 +64,9 @@ resource "lxd_instance" "consul_server" {
   device {
     name = "consul-data"
     type = "disk"
+
     properties = {
-      path   = "/opt/consul/data"
+      path   = "/opt/consul"
       source = lxd_volume.consul_server_data[each.key].name
       pool   = lxd_volume.consul_server_data[each.key].pool
     }

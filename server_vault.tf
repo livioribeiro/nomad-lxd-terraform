@@ -52,27 +52,19 @@ data "cloudinit_config" "vault_server" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      apt = {
-        sources = {
-          hashicorp = local.cloudinit_apt_hashicorp
-        }
-      }
-      packages = ["openssh-server", "consul", "vault"]
       runcmd = [
-        "systemctl enable consul vault",
-        "systemctl start consul vault",
-        "systemctl restart systemd-resolved",
+        "chown -R vault:vault /opt/vault/data",
+        "systemctl restart consul vault",
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
-        local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.vault.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.vault.private_key_pem },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(local.consul_servers)
+              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
               network_interface = "eth0"
@@ -103,9 +95,10 @@ resource "lxd_volume" "vault_server_data" {
 
 resource "lxd_instance" "vault_server" {
   for_each = local.vault_servers
+  depends_on = [packer_image.vault]
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = "local:vault"
   profiles = [lxd_profile.nomad_cluster.name]
 
   device {
@@ -121,6 +114,7 @@ resource "lxd_instance" "vault_server" {
   device {
     name = "vault-data"
     type = "disk"
+
     properties = {
       path   = "/opt/vault/data"
       source = lxd_volume.vault_server_data[each.key].name

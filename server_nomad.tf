@@ -67,33 +67,22 @@ data "cloudinit_config" "nomad_server" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      apt = {
-        sources = {
-          hashicorp = local.cloudinit_apt_hashicorp
-        }
-      }
-      packages = ["openssh-server", "consul", "nomad"]
       runcmd = [
-        "mkdir -p /opt/nomad/data && chown -R nomad:nomad /opt/nomad",
-        "sed -i '/\\[Service\\]/a User=nomad' /usr/lib/systemd/system/nomad.service",
-        "systemctl daemon-reload",
-        "systemctl enable consul nomad",
-        "systemctl start consul nomad",
-        "systemctl restart systemd-resolved",
+        "chown -R nomad:nomad /opt/nomad",
+        "systemctl restart consul nomad",
         "ln -s /etc/certs.d/ca.pem /usr/local/share/ca-certificates/nomad-cluster.crt",
         "update-ca-certificates",
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} vault.${var.external_domain}' >> /etc/hosts; fi",
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} keycloak.${var.apps_subdomain}.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
-        local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.nomad_server.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.nomad_server.private_key_pem },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(local.consul_servers)
+              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.nomad_server_agent[each.key].secret_id
               network_interface = "eth0"
@@ -123,9 +112,10 @@ resource "lxd_volume" "nomad_server_data" {
 
 resource "lxd_instance" "nomad_server" {
   for_each = local.nomad_servers
+  depends_on = [packer_image.nomad_server]
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = "local:nomad-server"
   profiles = [lxd_profile.nomad_cluster.name]
 
   device {
@@ -141,6 +131,7 @@ resource "lxd_instance" "nomad_server" {
   device {
     name = "nomad-data"
     type = "disk"
+
     properties = {
       path   = "/opt/nomad/data"
       source = lxd_volume.nomad_server_data[each.key].name

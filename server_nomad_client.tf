@@ -74,64 +74,17 @@ data "cloudinit_config" "nomad_client" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      apt = {
-        sources = {
-          hashicorp = local.cloudinit_apt_hashicorp
-          docker    = local.cloudinit_apt_docker
-          getenvoy  = local.cloudinit_apt_getenvoy
-        }
-      }
-      packages = [
-        "openssh-server",
-        "consul",
-        "nomad",
-        "docker-ce",
-        "containerd.io",
-        "getenvoy-envoy",
-        "nfs-common",
-      ]
       runcmd = [
-        "mkdir -p /opt/cni/bin",
-        "wget -q -O /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz",
-        "tar -vxf /tmp/cni-plugins.tgz -C /opt/cni/bin",
-        "chown root.root /opt/cni/bin",
-        "chmod 755 /opt/cni/bin/*",
-        "rm /tmp/cni-plugins.tgz",
-        "usermod -aG docker nomad",
-        "systemctl enable consul nomad docker",
-        "systemctl start consul nomad docker",
-        "systemctl restart systemd-resolved",
-        "docker plugin install grafana/loki-docker-driver:2.9.3 --alias loki --grant-all-permissions",
-        "mount --make-shared /",
+        "systemctl restart consul nomad",
       ]
       write_files = [
-        local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.nomad_client.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.nomad_client.private_key_pem },
         {
-          path    = "/etc/systemd/resolved.conf.d/docker.conf",
-          content = <<-EOT
-            [Resolve]
-            DNSStubListener=yes
-            DNSStubListenerExtra=172.17.0.1
-          EOT
-        },
-        {
-          path    = "/etc/docker/daemon.json",
-          content = <<-EOT
-            {
-              "dns": ["172.17.0.1"],
-              "registry-mirrors": [
-                "http://docker-hub-mirror.service.consul:5000"
-              ]
-            }
-          EOT
-        },
-        {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(local.consul_servers)
+              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.nomad_client_agent[each.key].secret_id
               network_interface = "enp5s0"
@@ -153,9 +106,10 @@ data "cloudinit_config" "nomad_client" {
 
 resource "lxd_instance" "nomad_client" {
   for_each = merge(local.nomad_infra_clients, { for i in local.nomad_apps_clients : i => null })
+  depends_on = [packer_image.nomad_client]
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = "local:nomad-client"
   type     = "virtual-machine"
   profiles = [lxd_profile.nomad_cluster.name]
 
@@ -175,7 +129,8 @@ resource "lxd_instance" "nomad_client" {
   }
 
   config = {
-    "cloud-init.user-data" = data.cloudinit_config.nomad_client[each.key].rendered
+    "cloud-init.user-data"  = data.cloudinit_config.nomad_client[each.key].rendered
+    "user.access_interface" = "enp5s0"
   }
 
   provisioner "remote-exec" {
@@ -184,6 +139,7 @@ resource "lxd_instance" "nomad_client" {
       user        = "ubuntu"
       private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
     }
+  
     inline = ["cloud-init status -w > /dev/null"]
   }
 }
