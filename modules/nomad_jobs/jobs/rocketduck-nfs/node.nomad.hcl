@@ -1,5 +1,5 @@
 variable "version" {
-  type = string
+  type    = string
   default = "0.7.0"
 }
 
@@ -33,7 +33,7 @@ job "storage-node" {
         ]
 
         network_mode = "host" # required so the mount works even after stopping the container
-        privileged = true
+        privileged   = true
       }
 
       csi_plugin {

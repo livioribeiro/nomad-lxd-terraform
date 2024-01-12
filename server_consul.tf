@@ -21,9 +21,11 @@ data "cloudinit_config" "consul_server" {
       runcmd = [
         "systemctl enable consul",
         "systemctl start consul",
+        "systemctl restart systemd-resolved",
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
       write_files = [
+        local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.consul.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.consul.private_key_pem },
@@ -83,7 +85,7 @@ resource "lxd_instance" "consul_server" {
     connection {
       host        = self.ipv4_address
       user        = "ubuntu"
-      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+      private_key = tls_private_key.ssh_nomad_cluster.private_key_openssh
     }
     inline = ["cloud-init status -w > /dev/null"]
   }
@@ -131,7 +133,7 @@ resource "null_resource" "consul_server_agent_token" {
     connection {
       host        = each.value.ipv4_address
       user        = "ubuntu"
-      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+      private_key = tls_private_key.ssh_nomad_cluster.private_key_openssh
     }
 
     inline = [

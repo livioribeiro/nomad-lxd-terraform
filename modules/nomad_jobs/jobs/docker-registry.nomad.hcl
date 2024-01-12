@@ -50,7 +50,7 @@ job "docker-hub-mirror" {
       config {
         image = "registry:${var.version}"
         ports = ["docker"]
-        args = ["local/config.yml"]
+        args  = ["local/config.yml"]
       }
 
       volume_mount {
@@ -65,7 +65,7 @@ job "docker-hub-mirror" {
 
       template {
         destination = "local/config.yml"
-        data = <<-EOT
+        data        = <<-EOT
           version: 0.1
           http:
             addr: 0.0.0.0:5000

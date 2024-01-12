@@ -25,23 +25,32 @@ job "traefik" {
 
   group "traefik" {
     network {
-      port "http" {
+      port "ingress" {
         static = 80
       }
 
-      port "traefik" {
+      port "dashboard" {
         static = 8080
       }
     }
 
     service {
-      name = "traefik"
-      port = "traefik"
+      name = "traefik-ingress"
+      port = "ingress"
+
+      connect {
+        native = true
+      }
+    }
+
+    service {
+      name = "traefik-dashboard"
+      port = "dashboard"
 
       check {
         name     = "alive"
-        type     = "tcp"
-        port     = "http"
+        type     = "http"
+        path     = "/"
         interval = "10s"
         timeout  = "2s"
       }
@@ -53,6 +62,7 @@ job "traefik" {
       config {
         image        = "traefik:${var.version}"
         network_mode = "host"
+        // ports = ["ingress", "dashboard"]
 
         volumes = [
           "local/traefik.yaml:/etc/traefik/traefik.yaml",
@@ -75,6 +85,7 @@ job "traefik" {
         data            = <<-EOF
           log:
             level: INFO
+
           entryPoints:
             http:
               address: ":80"
@@ -94,11 +105,13 @@ job "traefik" {
 
           providers:
             consulCatalog:
+              endpoint:
+                address: '[[ env "attr.unique.network.ip-address" ]]:8500'
+                token: "${var.consul_token}"
+              serviceName: traefik-ingress
+              connectAware: true
               exposedByDefault: false
               defaultRule: "Host(`{{ normalize .Name }}.[[ env "PROXY_SUFFIX" ]]`)"
-              connectAware: true
-              endpoint:
-                token: "${var.consul_token}"
         EOF
       }
     }

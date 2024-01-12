@@ -23,7 +23,7 @@ job "grafana" {
         to = 3000
       }
     }
-    
+
     service {
       name = "grafana"
       port = "http"
@@ -57,7 +57,7 @@ job "grafana" {
         name     = "Healthiness Check"
         type     = "http"
         port     = "http"
-        path      = "/robots.txt"
+        path     = "/robots.txt"
         interval = "10s"
         timeout  = "5s"
 
@@ -77,7 +77,7 @@ job "grafana" {
         on_update = "ignore_warnings"
 
         check_restart {
-          grace = "5s"
+          grace           = "5s"
           ignore_warnings = true
         }
       }
@@ -91,9 +91,9 @@ job "grafana" {
         ports = ["http"]
 
         mount {
-          type = "bind"
-          source = "local/datasource-loki.yaml"
-          target = "/usr/share/grafana/conf/provisioning/datasources/loki.yaml"
+          type     = "bind"
+          source   = "local/datasource-loki.yaml"
+          target   = "/usr/share/grafana/conf/provisioning/datasources/loki.yaml"
           readonly = true
         }
       }
@@ -105,7 +105,7 @@ job "grafana" {
 
       template {
         destination = "local/datasource-loki.yaml"
-        data = <<-EOT
+        data        = <<-EOT
           apiVersion: 1
           datasources:
           - name: Loki

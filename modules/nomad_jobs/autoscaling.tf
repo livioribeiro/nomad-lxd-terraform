@@ -16,8 +16,6 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
     }
 
     namespace "${nomad_namespace.system_autoscaling.name}" {
-      policy = "scale"
-
       variables {
         path "nomad-autoscaler/lock" {
           capabilities = ["read", "write", "destroy"]
@@ -33,6 +31,8 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
 }
 
 resource "nomad_job" "autoscaler" {
+  depends_on = [nomad_acl_policy.nomad_autoscaler]
+
   jobspec = file("${path.module}/jobs/autoscaler.nomad.hcl")
   # detach = false
 
@@ -43,16 +43,16 @@ resource "nomad_job" "autoscaler" {
   }
 }
 
-resource "consul_config_entry" "nomad_autoscaler_intention" {
-  kind = "service-intentions"
-  name = "prometheus"
+# resource "consul_config_entry" "nomad_autoscaler_intention" {
+#   kind = "service-intentions"
+#   name = "prometheus"
 
-  config_json = jsonencode({
-    Sources = [
-      {
-        Name   = "autoscaler"
-        Action = "allow"
-      }
-    ]
-  })
-}
+#   config_json = jsonencode({
+#     Sources = [
+#       {
+#         Name   = "autoscaler"
+#         Action = "allow"
+#       }
+#     ]
+#   })
+# }

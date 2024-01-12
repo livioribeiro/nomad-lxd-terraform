@@ -71,7 +71,7 @@ resource "lxd_instance" "load_balancer" {
     connection {
       host        = self.ipv4_address
       user        = "ubuntu"
-      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+      private_key = tls_private_key.ssh_nomad_cluster.private_key_openssh
     }
     inline = ["cloud-init status -w > /dev/null"]
   }

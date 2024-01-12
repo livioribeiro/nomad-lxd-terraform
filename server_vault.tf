@@ -28,16 +28,13 @@ resource "consul_acl_policy" "vault_server" {
 
 resource "consul_acl_token" "vault_server" {
   depends_on = [null_resource.ansible_consul]
-  for_each   = local.vault_servers
 
-  description = "${each.key} client token"
+  description = "Vault token"
   policies    = [consul_acl_policy.vault_server.name]
 }
 
 data "consul_acl_token_secret_id" "vault_server" {
-  for_each = local.vault_servers
-
-  accessor_id = consul_acl_token.vault_server[each.key].id
+  accessor_id = consul_acl_token.vault_server.id
 }
 
 data "cloudinit_config" "vault_server" {
@@ -72,7 +69,7 @@ data "cloudinit_config" "vault_server" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(local.consul_servers)
+              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
               network_interface = "eth0"
@@ -84,7 +81,7 @@ data "cloudinit_config" "vault_server" {
             "config/vault.hcl", {
               hostname      = each.key
               vault_servers = local.vault_servers
-              consul_token  = data.consul_acl_token_secret_id.vault_server[each.key].secret_id
+              consul_token  = data.consul_acl_token_secret_id.vault_server.secret_id
             }
           )
         },
@@ -136,7 +133,7 @@ resource "lxd_instance" "vault_server" {
     connection {
       host        = self.ipv4_address
       user        = "ubuntu"
-      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+      private_key = tls_private_key.ssh_nomad_cluster.private_key_openssh
     }
     inline = ["cloud-init status -w > /dev/null"]
   }

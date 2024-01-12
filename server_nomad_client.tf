@@ -5,11 +5,6 @@ locals {
   ]
 
   nomad_clients = concat(keys(local.nomad_infra_clients), local.nomad_apps_clients)
-
-  nomad_node_pool = merge(
-    { for s, _ in local.nomad_infra_clients : s => "infra" },
-    { for s in local.nomad_apps_clients : s => "default" },
-  )
 }
 
 resource "consul_acl_token" "nomad_client_agent" {
@@ -45,21 +40,20 @@ resource "consul_acl_policy" "nomad_client" {
     key_prefix "" {
       policy = "read"
     }
+
+    mesh = "write"
   EOT
 }
 
 resource "consul_acl_token" "nomad_client" {
   depends_on = [null_resource.ansible_consul]
-  for_each   = toset(local.nomad_clients)
 
-  description = "${each.key} client token"
+  description = "Nomad client token"
   policies    = [consul_acl_policy.nomad_client.name]
 }
 
 data "consul_acl_token_secret_id" "nomad_client" {
-  for_each = toset(local.nomad_clients)
-
-  accessor_id = consul_acl_token.nomad_client[each.key].id
+  accessor_id = consul_acl_token.nomad_client.id
 }
 
 data "cloudinit_config" "nomad_client" {
@@ -131,7 +125,7 @@ data "cloudinit_config" "nomad_client" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(local.consul_servers)
+              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.nomad_client_agent[each.key].secret_id
               network_interface = "enp5s0"
@@ -141,8 +135,8 @@ data "cloudinit_config" "nomad_client" {
         {
           path = "/etc/nomad.d/nomad.hcl", content = templatefile(
             "config/nomad-client.hcl", {
-              node_pool    = local.nomad_node_pool[each.key]
-              consul_token = data.consul_acl_token_secret_id.nomad_client[each.key].secret_id
+              node_pool    = startswith(each.key, "nomad-infra-client-") ? "infra" : "default",
+              consul_token = data.consul_acl_token_secret_id.nomad_client.secret_id
             }
           )
         },
@@ -182,7 +176,7 @@ resource "lxd_instance" "nomad_client" {
     connection {
       host        = self.ipv4_address
       user        = "ubuntu"
-      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+      private_key = tls_private_key.ssh_nomad_cluster.private_key_openssh
     }
     inline = ["cloud-init status -w > /dev/null"]
   }

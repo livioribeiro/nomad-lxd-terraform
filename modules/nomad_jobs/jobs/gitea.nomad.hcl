@@ -27,7 +27,7 @@ job "gitea" {
   type      = "service"
   namespace = var.namespace
 
-  group "app" {
+  group "gitea" {
     count = 1
 
     update {
@@ -44,12 +44,18 @@ job "gitea" {
 
     service {
       name = "gitea"
-      port = "http"
-      tags = ["traefik.enable=true"]
+      port = "3000"
+      tags = [
+        "traefik.enable=true",
+        "traefik.consulcatalog.connect=true",
+      ]
 
       check {
+        name     = "api-health"
+        expose   = true
         type     = "http"
         path     = "/api/healthz"
+        port     = "http"
         interval = "10s"
         timeout  = "5s"
 
@@ -60,12 +66,15 @@ job "gitea" {
 
       connect {
         sidecar_service {
-          tags = ["traefik.enable=false"]
-
           proxy {
             upstreams {
               destination_name = "gitea-database"
               local_bind_port  = 5432
+            }
+
+            upstreams {
+              destination_name = "gitea-cache"
+              local_bind_port  = 6379
             }
           }
         }
@@ -87,30 +96,11 @@ job "gitea" {
       access_mode     = "single-node-writer"
     }
 
-    task "redis" {
-      driver = "docker"
-
-      lifecycle {
-        hook    = "prestart"
-        sidecar = true
-      }
-
-      config {
-        image = "redis:7.2-alpine"
-      }
-
-      resources {
-        cpu = 100
-        memory = 128
-      }
-    }
-
     task "gitea" {
       driver = "docker"
 
       config {
-        image = "gitea/gitea:${var.version}"
-        ports = ["http"]
+        image   = "gitea/gitea:${var.version}"
         command = "/opt/init.sh"
 
         volumes = [
@@ -143,30 +133,30 @@ job "gitea" {
         EOT
 
         destination = "local/init.sh"
-        perms = "755"
+        perms       = "755"
       }
 
       env {
-        GITEA__server__HTTP_PORT          = "${NOMAD_PORT_http}"
-        GITEA__server__DOMAIN             = "${var.gitea_host}"
-        GITEA__server__ROOT_URL           = "http://${var.gitea_host}/"
-        GITEA__security__INSTALL_LOCK     = "true"
-        GITEA__security__INTERNAL_TOKEN   = "gitea_internal_token"
-        GITEA__security__SECRET_KEY       = "gitea_secret_key"
-        GITEA__database__DB_TYPE          = "postgres"
-        GITEA__database__HOST             = "localhost:5432"
-        GITEA__database__NAME             = "gitea"
-        GITEA__database__USER             = "gitea"
-        GITEA__database__PASSWD           = "gitea"
-        GITEA__cache__ADAPTER             = "redis"
-        GITEA__cache__HOST                = "redis://localhost:6379/0"
-        GITEA__queue__TYPE                = "redis"
-        GITEA__queue__CONN_STR            = "redis://localhost:6379/0"
-        GITEA__session__PROVIDER          = "redis"
-        GITEA__session__PROVIDER_CONFIG   = "redis://localhost:6379/0"
-        GITEA__log__LEVEL                 = "Warn"
-        GITEA__actions__ENABLED           = "true"
-        GITEA__metrics__ENABLED           = "true"
+        GITEA__server__HTTP_PORT        = "${NOMAD_PORT_http}"
+        GITEA__server__DOMAIN           = "${var.gitea_host}"
+        GITEA__server__ROOT_URL         = "http://${var.gitea_host}/"
+        GITEA__security__INSTALL_LOCK   = "true"
+        GITEA__security__INTERNAL_TOKEN = "gitea_internal_token"
+        GITEA__security__SECRET_KEY     = "gitea_secret_key"
+        GITEA__database__DB_TYPE        = "postgres"
+        GITEA__database__HOST           = "localhost:5432"
+        GITEA__database__NAME           = "gitea"
+        GITEA__database__USER           = "gitea"
+        GITEA__database__PASSWD         = "gitea"
+        GITEA__cache__ADAPTER           = "redis"
+        GITEA__cache__HOST              = "redis://localhost:6379/0"
+        GITEA__queue__TYPE              = "redis"
+        GITEA__queue__CONN_STR          = "redis://localhost:6379/1"
+        GITEA__session__PROVIDER        = "redis"
+        GITEA__session__PROVIDER_CONFIG = "redis://localhost:6379/2"
+        GITEA__log__LEVEL               = "Warn"
+        GITEA__actions__ENABLED         = "true"
+        GITEA__metrics__ENABLED         = "true"
       }
 
       resources {
@@ -223,9 +213,9 @@ job "gitea" {
       }
 
       env {
-        POSTGRES_USER = "gitea"
+        POSTGRES_USER     = "gitea"
         POSTGRES_PASSWORD = "gitea"
-        PGDATA = "/var/lib/postgresql/data/pgdata"
+        PGDATA            = "/var/lib/postgresql/data/pgdata"
       }
 
       volume_mount {
@@ -234,7 +224,43 @@ job "gitea" {
       }
 
       resources {
-        cpu = 100
+        cpu    = 100
+        memory = 128
+      }
+    }
+  }
+
+  group "cache" {
+    count = 1
+
+    network {
+      mode = "bridge"
+    }
+
+    service {
+      port = "6379"
+
+      connect {
+        sidecar_service {}
+
+        sidecar_task {
+          resources {
+            cpu    = 50
+            memory = 32
+          }
+        }
+      }
+    }
+
+    task "redis" {
+      driver = "docker"
+
+      config {
+        image = "redis:7.2-alpine"
+      }
+
+      resources {
+        cpu    = 100
         memory = 128
       }
     }

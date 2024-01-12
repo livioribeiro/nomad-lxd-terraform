@@ -23,7 +23,7 @@ job "loki" {
         static = 3100
       }
     }
-    
+
     service {
       name = "loki"
       port = "3100"
@@ -63,7 +63,7 @@ job "loki" {
         on_update = "ignore_warnings"
 
         check_restart {
-          grace = "5s"
+          grace           = "5s"
           ignore_warnings = true
         }
       }
@@ -74,7 +74,7 @@ job "loki" {
 
       config {
         image = "grafana/loki:${var.version}"
-        args = ["-config.file=/local/loki.yaml"]
+        args  = ["-config.file=/local/loki.yaml"]
         ports = ["http"]
       }
 

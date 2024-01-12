@@ -91,7 +91,7 @@ job "prometheus" {
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/ca.pem"
-        data = <<-EOT
+        data        = <<-EOT
           {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
           {{- .Data.issuing_ca -}}
           {{ end }}
@@ -100,7 +100,7 @@ job "prometheus" {
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/cert.pem"
-        data = <<-EOT
+        data        = <<-EOT
           {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
           {{- .Data.certificate -}}
           {{ end }}
@@ -109,7 +109,7 @@ job "prometheus" {
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/key.pem"
-        data = <<-EOT
+        data        = <<-EOT
           {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
           {{- .Data.private_key -}}
           {{ end }}
@@ -117,9 +117,9 @@ job "prometheus" {
       }
 
       template {
-        destination   = "local/prometheus.yml"
+        destination = "local/prometheus.yml"
         change_mode = "restart"
-        data = <<-EOT
+        data        = <<-EOT
           # Source:
           # https://learn.hashicorp.com/tutorials/nomad/prometheus-metrics
           ---

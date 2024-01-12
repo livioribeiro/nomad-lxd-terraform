@@ -38,21 +38,19 @@ resource "consul_acl_policy" "nomad_server" {
     }
 
     acl = "write"
+    mesh = "write"
   EOT
 }
 
 resource "consul_acl_token" "nomad_server" {
   depends_on = [null_resource.ansible_consul]
-  for_each   = local.nomad_servers
 
-  description = "${each.key} client token"
+  description = "Nomad server token"
   policies    = [consul_acl_policy.nomad_server.name]
 }
 
 data "consul_acl_token_secret_id" "nomad_server" {
-  for_each = local.nomad_servers
-
-  accessor_id = consul_acl_token.nomad_server[each.key].id
+  accessor_id = consul_acl_token.nomad_server.id
 }
 
 data "cloudinit_config" "nomad_server" {
@@ -93,7 +91,7 @@ data "cloudinit_config" "nomad_server" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(local.consul_servers)
+              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.nomad_server_agent[each.key].secret_id
               network_interface = "eth0"
@@ -104,7 +102,7 @@ data "cloudinit_config" "nomad_server" {
           path = "/etc/nomad.d/nomad.hcl", content = templatefile(
             "config/nomad-server.hcl", {
               encrypt_key  = random_id.nomad_encrypt_key.b64_std
-              consul_token = data.consul_acl_token_secret_id.nomad_server[each.key].secret_id
+              consul_token = data.consul_acl_token_secret_id.nomad_server.secret_id
             }
           )
         },
@@ -156,7 +154,7 @@ resource "lxd_instance" "nomad_server" {
     connection {
       host        = self.ipv4_address
       user        = "ubuntu"
-      private_key = data.tls_public_key.ssh_nomad_cluster.private_key_openssh
+      private_key = tls_private_key.ssh_nomad_cluster.private_key_openssh
     }
     inline = ["cloud-init status -w > /dev/null"]
   }

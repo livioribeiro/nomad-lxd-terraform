@@ -80,7 +80,7 @@ resource "nomad_job" "grafana" {
   }
 }
 
-resource "consul_config_entry" "grafana_prometheus_intention" {
+resource "consul_config_entry" "prometheus_intention" {
   kind = "service-intentions"
   name = "prometheus"
 
@@ -89,12 +89,16 @@ resource "consul_config_entry" "grafana_prometheus_intention" {
       {
         Name   = "grafana"
         Action = "allow"
+      },
+      {
+        Name   = "autoscaler"
+        Action = "allow"
       }
     ]
   })
 }
 
-resource "consul_config_entry" "grafana_loki_intention" {
+resource "consul_config_entry" "loki_intention" {
   kind = "service-intentions"
   name = "loki"
 

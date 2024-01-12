@@ -19,7 +19,7 @@ job "autoscaler" {
   namespace = var.namespace
 
   group "autoscaler" {
-    count = 3
+    count = 1
 
     network {
       mode = "bridge"
@@ -59,36 +59,36 @@ job "autoscaler" {
       }
     }
 
-    // service {
-    //   name = "autoscaler-promtail"
-    //   port = "promtail"
-    //   task = "promtail"
-
-    //   connect {
-    //     sidecar_service {
-    //       proxy {
-    //         upstreams {
-    //           destination_name = "loki"
-    //           local_bind_port  = 3100
-    //         }
-    //       }
-    //     }
-
-    //     sidecar_task {
-    //       resources {
-    //         cpu    = 50
-    //         memory = 32
-    //       }
-    //     }
-    //   }
-    // }
+    # service {
+    #   name = "autoscaler-promtail"
+    #   port = "promtail"
+    #   task = "promtail"
+    #
+    #   connect {
+    #     sidecar_service {
+    #       proxy {
+    #         upstreams {
+    #           destination_name = "loki"
+    #           local_bind_port  = 3100
+    #         }
+    #       }
+    #     }
+    #
+    #     sidecar_task {
+    #       resources {
+    #         cpu    = 50
+    #         memory = 32
+    #       }
+    #     }
+    #   }
+    # }
 
     task "socat" {
       driver = "docker"
 
       config {
         image = "alpine/socat:1.7.4.4"
-        args  = [
+        args = [
           "tcp-listen:4646,fork,reuseaddr",
           "unix-connect:/secrets/api.sock",
         ]
@@ -100,7 +100,7 @@ job "autoscaler" {
       }
 
       lifecycle {
-        hook = "prestart"
+        hook    = "prestart"
         sidecar = true
       }
     }
@@ -150,7 +150,7 @@ job "autoscaler" {
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/ca.pem"
-        data = <<-EOT
+        data        = <<-EOT
           {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
           {{- .Data.issuing_ca -}}
           {{ end }}
@@ -159,7 +159,7 @@ job "autoscaler" {
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/cert.pem"
-        data = <<-EOT
+        data        = <<-EOT
           {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
           {{- .Data.certificate -}}
           {{ end }}
@@ -168,7 +168,7 @@ job "autoscaler" {
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/key.pem"
-        data = <<-EOT
+        data        = <<-EOT
           {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
           {{- .Data.private_key -}}
           {{ end }}
@@ -177,16 +177,16 @@ job "autoscaler" {
 
       template {
         destination = "${NOMAD_TASK_DIR}/config.hcl"
-        data = <<-EOT
+        data        = <<-EOT
           nomad {
             address   = "http://localhost:4646"
             namespace = "*"
             token     = "{{ env "NOMAD_TOKEN" }}"
           }
 
-          high_availability {
-            enabled = true
-          }
+          # high_availability {
+          #   enabled = true
+          # }
 
           telemetry {
             prometheus_metrics = true
@@ -215,60 +215,55 @@ job "autoscaler" {
       }
     }
 
-  //   task "promtail" {
-  //     driver = "docker"
-
-  //     lifecycle {
-  //       hook    = "prestart"
-  //       sidecar = true
-  //     }
-
-  //     config {
-  //       image = "grafana/promtail:${var.promtail_version}"
-  //       ports = ["promtail"]
-  //       args = ["-config.file=local/promtail.yaml"]
-  //     }
-
-  //     resources {
-  //       cpu    = 50
-  //       memory = 32
-  //     }
-
-  //     template {
-  //       destination = "local/promtail.yaml"
-
-  //       data = <<-EOT
-  //         server:
-  //           http_listen_port: {{ env "NOMAD_PORT_promtail" }}
-  //           grpc_listen_port: 0
-  //         positions:
-  //           filename: /tmp/positions.yaml
-  //         client:
-  //           url: http://{{ env "NOMAD_UPSTREAM_ADDR_loki" }}/api/prom/push
-  //         scrape_configs:
-  //         - job_name: system
-  //           static_configs:
-  //           - targets:
-  //               - localhost
-  //             labels:
-  //               task: autoscaler
-  //               __path__: /alloc/logs/autoscaler*
-  //           pipeline_stages:
-  //           - match:
-  //               selector: '{task="autoscaler"}'
-  //               stages:
-  //               - regex:
-  //                   expression: '.*policy_id=(?P<policy_id>[a-zA-Z0-9_-]+).*source=(?P<source>[a-zA-Z0-9_-]+).*strategy=(?P<strategy>[a-zA-Z0-9_-]+).*target=(?P<target>[a-zA-Z0-9_-]+).*Group:(?P<group>[a-zA-Z0-9]+).*Job:(?P<job>[a-zA-Z0-9_-]+).*Namespace:(?P<namespace>[a-zA-Z0-9_-]+)'
-  //               - labels:
-  //                   policy_id:
-  //                   source:
-  //                   strategy:
-  //                   target:
-  //                   group:
-  //                   job:
-  //                   namespace:
-  //       EOT
-  //     }
-  //   }
+    # task "promtail" {
+    #   driver = "docker"
+    #   #   lifecycle {
+    #     hook    = "prestart"
+    #     sidecar = true
+    #   }
+    #   #   config {
+    #     image = "grafana/promtail:${var.promtail_version}"
+    #     ports = ["promtail"]
+    #     args = ["-config.file=local/promtail.yaml"]
+    #   }
+    #   #   resources {
+    #     cpu    = 50
+    #     memory = 32
+    #   }
+    #   #   template {
+    #     destination = "local/promtail.yaml"
+    #   #     data = <<-EOT
+    #       server:
+    #         http_listen_port: {{ env "NOMAD_PORT_promtail" }}
+    #         grpc_listen_port: 0
+    #       positions:
+    #         filename: /tmp/positions.yaml
+    #       client:
+    #         url: http://{{ env "NOMAD_UPSTREAM_ADDR_loki" }}/api/prom/push
+    #       scrape_configs:
+    #       - job_name: system
+    #         static_configs:
+    #         - targets:
+    #             - localhost
+    #           labels:
+    #             task: autoscaler
+    #             __path__: /alloc/logs/autoscaler*
+    #         pipeline_stages:
+    #         - match:
+    #             selector: '{task="autoscaler"}'
+    #             stages:
+    #             - regex:
+    #                 expression: '.*policy_id=(?P<policy_id>[a-zA-Z0-9_-]+).*source=(?P<source>[a-zA-Z0-9_-]+).*strategy=(?P<strategy>[a-zA-Z0-9_-]+).*target=(?P<target>[a-zA-Z0-9_-]+).*Group:(?P<group>[a-zA-Z0-9]+).*Job:(?P<job>[a-zA-Z0-9_-]+).*Namespace:(?P<namespace>[a-zA-Z0-9_-]+)'
+    #             - labels:
+    #                 policy_id:
+    #                 source:
+    #                 strategy:
+    #                 target:
+    #                 group:
+    #                 job:
+    #                 namespace:
+    #     EOT
+    #   }
+    # }
   }
 }

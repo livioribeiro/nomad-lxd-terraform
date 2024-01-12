@@ -48,9 +48,7 @@ job "keycloak" {
     service {
       name = "keycloak"
       port = "http"
-      tags = [
-        "traefik.enable=true"
-      ]
+      tags = ["traefik.enable=true"]
 
       check {
         name     = "Healthiness Check"
@@ -75,7 +73,7 @@ job "keycloak" {
         on_update = "ignore_warnings"
 
         check_restart {
-          grace = "5s"
+          grace           = "5s"
           ignore_warnings = true
         }
       }
@@ -91,6 +89,7 @@ job "keycloak" {
             }
           }
         }
+
         sidecar_task {
           resources {
             cpu    = 50
@@ -106,12 +105,12 @@ job "keycloak" {
       config {
         image = "quay.io/keycloak/keycloak:${var.version}"
         ports = ["http"]
-        args = ["start", "--import-realm"]
+        args  = ["start", "--import-realm"]
 
         mount {
-          type = "bind"
-          source = "local/realm.json"
-          target = "/opt/keycloak/data/import/realm.json"
+          type     = "bind"
+          source   = "local/realm.json"
+          target   = "/opt/keycloak/data/import/realm.json"
           readonly = true
         }
       }
@@ -188,9 +187,9 @@ job "keycloak" {
       }
 
       env {
-        POSTGRES_USER = "keycloak"
+        POSTGRES_USER     = "keycloak"
         POSTGRES_PASSWORD = "keycloak"
-        PGDATA = "/var/lib/postgresql/data/pgdata"
+        PGDATA            = "/var/lib/postgresql/data/pgdata"
       }
 
       volume_mount {
@@ -199,7 +198,7 @@ job "keycloak" {
       }
 
       resources {
-        cpu = 100
+        cpu    = 100
         memory = 128
       }
     }
