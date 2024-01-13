@@ -112,8 +112,6 @@ job "autoscaler" {
         env = true
       }
 
-      vault {}
-
       config {
         image   = "hashicorp/nomad-autoscaler:${var.version}"
         command = "nomad-autoscaler"
@@ -149,33 +147,6 @@ job "autoscaler" {
       }
 
       template {
-        destination = "${NOMAD_SECRETS_DIR}/ca.pem"
-        data        = <<-EOT
-          {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
-          {{- .Data.issuing_ca -}}
-          {{ end }}
-        EOT
-      }
-
-      template {
-        destination = "${NOMAD_SECRETS_DIR}/cert.pem"
-        data        = <<-EOT
-          {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
-          {{- .Data.certificate -}}
-          {{ end }}
-        EOT
-      }
-
-      template {
-        destination = "${NOMAD_SECRETS_DIR}/key.pem"
-        data        = <<-EOT
-          {{ with secret "pki/issue/nomad-cluster" "ttl=24h" "format=pem_bundle" }}
-          {{- .Data.private_key -}}
-          {{ end }}
-        EOT
-      }
-
-      template {
         destination = "${NOMAD_TASK_DIR}/config.hcl"
         data        = <<-EOT
           nomad {
@@ -184,9 +155,9 @@ job "autoscaler" {
             token     = "{{ env "NOMAD_TOKEN" }}"
           }
 
-          # high_availability {
-          #   enabled = true
-          # }
+          high_availability {
+            enabled = false
+          }
 
           telemetry {
             prometheus_metrics = true
