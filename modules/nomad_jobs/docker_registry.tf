@@ -2,6 +2,14 @@ resource "nomad_namespace" "system_registry" {
   name = "system-registry"
 }
 
+resource "consul_acl_role" "system_registry" {
+  name        = "nomad-tasks-${nomad_namespace.system_registry.name}"
+
+  policies = [
+    data.consul_acl_policy.nomad_tasks.id,
+  ]
+}
+
 resource "nomad_csi_volume" "docker_hub_proxy_data" {
   depends_on = [
     data.nomad_plugin.nfs

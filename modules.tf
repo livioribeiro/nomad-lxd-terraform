@@ -4,6 +4,8 @@ module "nomad_jobs" {
     null_resource.ansible_nomad_server,
     lxd_instance.nomad_client,
     vault_pki_secret_backend_role.nomad_cluster,
+    module.nomad_consul_setup,
+    module.nomad_vault_setup,
   ]
   source = "./modules/nomad_jobs"
 

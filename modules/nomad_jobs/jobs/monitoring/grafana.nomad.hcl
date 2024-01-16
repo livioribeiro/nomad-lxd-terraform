@@ -45,6 +45,7 @@ job "grafana" {
             }
           }
         }
+
         sidecar_task {
           resources {
             cpu    = 50

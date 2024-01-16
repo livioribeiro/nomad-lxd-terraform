@@ -2,6 +2,14 @@ resource "nomad_namespace" "system_autoscaling" {
   name = "system-autoscaling"
 }
 
+resource "consul_acl_role" "system_autoscaling" {
+  name        = "nomad-tasks-${nomad_namespace.system_autoscaling.name}"
+
+  policies = [
+    data.consul_acl_policy.nomad_tasks.id,
+  ]
+}
+
 resource "nomad_acl_policy" "nomad_autoscaler" {
   name        = "nomad-autoscaler"
   description = "Nomad Autoscaler"
@@ -31,7 +39,10 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
 }
 
 resource "nomad_job" "autoscaler" {
-  depends_on = [nomad_acl_policy.nomad_autoscaler]
+  depends_on = [
+    nomad_job.docker_registry,
+    nomad_acl_policy.nomad_autoscaler,
+  ]
 
   jobspec = file("${path.module}/jobs/autoscaler.nomad.hcl")
   # detach = false

@@ -8,10 +8,10 @@ variable "namespace" {
   default = "system-autoscaling"
 }
 
-variable "promtail_version" {
-  type    = string
-  default = "2.9.1"
-}
+// variable "promtail_version" {
+//   type    = string
+//   default = "2.9.1"
+// }
 
 job "autoscaler" {
   type      = "service"
@@ -148,7 +148,8 @@ job "autoscaler" {
 
       template {
         destination = "${NOMAD_TASK_DIR}/config.hcl"
-        data        = <<-EOT
+
+        data = <<-EOT
           nomad {
             address   = "http://localhost:4646"
             namespace = "*"

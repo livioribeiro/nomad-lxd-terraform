@@ -29,18 +29,9 @@ resource "consul_acl_role" "prometheus" {
   description = "prometheus role"
 
   policies = [
-    consul_acl_policy.system_monitoring.id
+    consul_acl_policy.system_monitoring.id,
+    data.consul_acl_policy.nomad_tasks.id,
   ]
-}
-
-resource "consul_acl_token" "prometheus" {
-  description = "prometheus acl token"
-  roles       = [consul_acl_role.prometheus.name]
-  local       = true
-}
-
-data "consul_acl_token_secret_id" "prometheus" {
-  accessor_id = consul_acl_token.prometheus.id
 }
 
 resource "nomad_job" "prometheus" {
@@ -52,12 +43,13 @@ resource "nomad_job" "prometheus" {
   hcl2 {
     vars = {
       namespace = nomad_namespace.system_monitoring.name
-      consul_token = data.consul_acl_token_secret_id.prometheus.secret_id
     }
   }
 }
 
 resource "nomad_job" "loki" {
+  depends_on = [nomad_job.docker_registry]
+
   jobspec = file("${path.module}/jobs/monitoring/loki.nomad.hcl")
   # detach = false
 
@@ -70,6 +62,8 @@ resource "nomad_job" "loki" {
 
 # Grafana
 resource "nomad_job" "grafana" {
+  depends_on = [nomad_job.docker_registry]
+
   jobspec = file("${path.module}/jobs/monitoring/grafana.nomad.hcl")
   # detach = false
 

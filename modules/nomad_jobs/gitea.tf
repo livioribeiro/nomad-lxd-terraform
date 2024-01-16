@@ -2,10 +2,16 @@ resource "nomad_namespace" "gitea" {
   name = "scm"
 }
 
-resource "nomad_csi_volume" "gitea_data" {
-  depends_on = [
-    data.nomad_plugin.nfs
+resource "consul_acl_role" "gitea" {
+  name        = "nomad-tasks-${nomad_namespace.gitea.name}"
+
+  policies = [
+    data.consul_acl_policy.nomad_tasks.id,
   ]
+}
+
+resource "nomad_csi_volume" "gitea_data" {
+  depends_on = [data.nomad_plugin.nfs]
 
   plugin_id    = "nfs"
   volume_id    = "gitea-data"

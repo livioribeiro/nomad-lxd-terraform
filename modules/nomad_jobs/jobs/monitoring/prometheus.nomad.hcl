@@ -8,11 +8,6 @@ variable "namespace" {
   default = "system-monitoring"
 }
 
-variable "consul_token" {
-  type    = string
-  default = ""
-}
-
 job "prometheus" {
   type      = "service"
   node_pool = "infra"
@@ -80,14 +75,14 @@ job "prometheus" {
       }
 
       identity {
-        env = true
+        name          = "consul_default"
+        aud           = ["consul.io"]
+        ttl           = "24h"
+        change_mode   = "signal"
+        change_signal = "SIGHUP"
       }
 
-      vault {
-      }
-
-      consul {
-      }
+      vault {}
 
       template {
         destination = "${NOMAD_SECRETS_DIR}/ca.pem"
@@ -133,7 +128,7 @@ job "prometheus" {
           - job_name: consul_metrics
             consul_sd_configs:
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '${var.consul_token}'
+              token: '{{ env "CONSUL_TOKEN" }}'
               services: [consul]
 
             tls_config:
@@ -158,7 +153,7 @@ job "prometheus" {
           - job_name: vault_metrics
             consul_sd_configs:
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '${var.consul_token}'
+              token: '{{ env "CONSUL_TOKEN" }}'
               services: [vault]
               # tags: [active]
 
@@ -175,7 +170,7 @@ job "prometheus" {
           - job_name: nomad_metrics
             consul_sd_configs:
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '${var.consul_token}'
+              token: '{{ env "CONSUL_TOKEN" }}'
               services: [nomad-client, nomad]
 
             tls_config:
@@ -202,7 +197,7 @@ job "prometheus" {
           - job_name: nomad_autoscaler
             consul_sd_configs:
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '${var.consul_token}'
+              token: '{{ env "CONSUL_TOKEN" }}'
               services: [autoscaler]
 
             scrape_interval: 5s
@@ -214,14 +209,14 @@ job "prometheus" {
           - job_name: traefik_metrics
             consul_sd_configs:
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '${var.consul_token}'
+              token: '{{ env "CONSUL_TOKEN" }}'
               services: [traefik]
 
           # GITEA
           - job_name: gitea_metrics
             consul_sd_configs:
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '${var.consul_token}'
+              token: '{{ env "CONSUL_TOKEN" }}'
               services: [gitea]
 
           # CONSUL CONNECT ENVOY
@@ -229,7 +224,7 @@ job "prometheus" {
           - job_name: consul_connect_envoy_metrics
             consul_sd_configs:
               - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-                token: '${var.consul_token}'
+                token: '{{ env "CONSUL_TOKEN" }}'
 
             relabel_configs:
             - source_labels: [__meta_consul_service]

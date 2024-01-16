@@ -119,12 +119,13 @@ job "gitea" {
             if [ $retries -gt 10 ]; then
               exit 1
             fi
+            echo "waiting for database..."
             sleep 3
           done
 
           gitea migrate
 
-          if [ -z "$(gitea admin user list --admin | grep admin@example.com)" ]
+          if [ -z "$(gitea admin user list --admin | grep root@example.com)" ]
           then
             gitea admin user create --admin --username root --password Password123 --email root@example.com
           fi
@@ -137,26 +138,27 @@ job "gitea" {
       }
 
       env {
-        GITEA__server__HTTP_PORT        = "${NOMAD_PORT_http}"
-        GITEA__server__DOMAIN           = "${var.gitea_host}"
-        GITEA__server__ROOT_URL         = "http://${var.gitea_host}/"
-        GITEA__security__INSTALL_LOCK   = "true"
-        GITEA__security__INTERNAL_TOKEN = "gitea_internal_token"
-        GITEA__security__SECRET_KEY     = "gitea_secret_key"
-        GITEA__database__DB_TYPE        = "postgres"
-        GITEA__database__HOST           = "localhost:5432"
-        GITEA__database__NAME           = "gitea"
-        GITEA__database__USER           = "gitea"
-        GITEA__database__PASSWD         = "gitea"
-        GITEA__cache__ADAPTER           = "redis"
-        GITEA__cache__HOST              = "redis://localhost:6379/0"
-        GITEA__queue__TYPE              = "redis"
-        GITEA__queue__CONN_STR          = "redis://localhost:6379/1"
-        GITEA__session__PROVIDER        = "redis"
-        GITEA__session__PROVIDER_CONFIG = "redis://localhost:6379/2"
-        GITEA__log__LEVEL               = "Warn"
-        GITEA__actions__ENABLED         = "true"
-        GITEA__metrics__ENABLED         = "true"
+        GITEA__server__HTTP_PORT                  = "${NOMAD_PORT_http}"
+        GITEA__server__DOMAIN                     = "${var.gitea_host}"
+        GITEA__server__ROOT_URL                   = "http://${var.gitea_host}/"
+        GITEA__security__INSTALL_LOCK             = "true"
+        GITEA__security__INTERNAL_TOKEN           = "gitea_internal_token"
+        GITEA__security__SECRET_KEY               = "gitea_secret_key"
+        GITEA__security__DISABLE_QUERY_AUTH_TOKEN = "true"
+        GITEA__database__DB_TYPE                  = "postgres"
+        GITEA__database__HOST                     = "localhost:5432"
+        GITEA__database__NAME                     = "gitea"
+        GITEA__database__USER                     = "gitea"
+        GITEA__database__PASSWD                   = "gitea"
+        GITEA__cache__ADAPTER                     = "redis"
+        GITEA__cache__HOST                        = "redis://localhost:6379/0"
+        GITEA__queue__TYPE                        = "redis"
+        GITEA__queue__CONN_STR                    = "redis://localhost:6379/1"
+        GITEA__session__PROVIDER                  = "redis"
+        GITEA__session__PROVIDER_CONFIG           = "redis://localhost:6379/2"
+        GITEA__log__LEVEL                         = "Warn"
+        GITEA__actions__ENABLED                   = "true"
+        GITEA__metrics__ENABLED                   = "true"
       }
 
       resources {

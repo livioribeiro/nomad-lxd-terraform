@@ -13,11 +13,6 @@ variable "proxy_suffix" {
   default = ""
 }
 
-variable "consul_token" {
-  type    = string
-  default = ""
-}
-
 job "traefik" {
   type      = "system"
   node_pool = "infra"
@@ -62,7 +57,6 @@ job "traefik" {
       config {
         image        = "traefik:${var.version}"
         network_mode = "host"
-        // ports = ["ingress", "dashboard"]
 
         volumes = [
           "local/traefik.yaml:/etc/traefik/traefik.yaml",
@@ -74,8 +68,12 @@ job "traefik" {
         memory = 128
       }
 
-      env {
-        PROXY_SUFFIX = var.proxy_suffix
+      identity {
+        name          = "consul_default"
+        aud           = ["consul.io"]
+        ttl           = "24h"
+        change_mode   = "signal"
+        change_signal = "SIGHUP"
       }
 
       template {
@@ -107,11 +105,11 @@ job "traefik" {
             consulCatalog:
               endpoint:
                 address: '[[ env "attr.unique.network.ip-address" ]]:8500'
-                token: "${var.consul_token}"
+                token: "[[ env "CONSUL_TOKEN" ]]"
               serviceName: traefik-ingress
               connectAware: true
               exposedByDefault: false
-              defaultRule: "Host(`{{ normalize .Name }}.[[ env "PROXY_SUFFIX" ]]`)"
+              defaultRule: "Host(`{{ normalize .Name }}.${var.proxy_suffix}`)"
         EOF
       }
     }

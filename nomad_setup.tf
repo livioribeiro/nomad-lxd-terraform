@@ -7,6 +7,16 @@ module "nomad_consul_setup" {
   version = "2.0.0"
 
   nomad_jwks_url = "http://nomad.${var.external_domain}/.well-known/jwks.json"
+  # nomad_namespaces = [
+  #   "default",
+  #   "scm",
+  #   "sso",
+  #   "system-autoscaling",
+  #   "system-registry",
+  #   "system-gateway",
+  #   "system-storage",
+  #   "system-monitornig",
+  # ]
 }
 
 module "nomad_vault_setup" {

@@ -65,7 +65,8 @@ job "docker-hub-mirror" {
 
       template {
         destination = "local/config.yml"
-        data        = <<-EOT
+
+        data = <<-EOT
           version: 0.1
           http:
             addr: 0.0.0.0:5000

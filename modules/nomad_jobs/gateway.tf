@@ -1,3 +1,7 @@
+resource "nomad_namespace" "system_gateway" {
+  name = "system-gateway"
+}
+
 # Traefik Consul ACL
 resource "consul_acl_policy" "system_gateway" {
   name  = "system-gateway"
@@ -21,7 +25,8 @@ resource "consul_acl_role" "traefik" {
   description = "Traefik role"
 
   policies = [
-    consul_acl_policy.system_gateway.id
+    consul_acl_policy.system_gateway.id,
+    data.consul_acl_policy.nomad_tasks.id,
   ]
 }
 
@@ -35,10 +40,6 @@ data "consul_acl_token_secret_id" "traefik" {
   accessor_id = consul_acl_token.traefik.id
 }
 
-resource "nomad_namespace" "system_gateway" {
-  name = "system-gateway"
-}
-
 resource "nomad_job" "proxy" {
   depends_on = [nomad_job.docker_registry]
 
@@ -49,7 +50,6 @@ resource "nomad_job" "proxy" {
     vars = {
       namespace    = nomad_namespace.system_gateway.name
       proxy_suffix = "${var.apps_subdomain}.${var.external_domain}"
-      consul_token = data.consul_acl_token_secret_id.traefik.secret_id
     }
   }
 }
