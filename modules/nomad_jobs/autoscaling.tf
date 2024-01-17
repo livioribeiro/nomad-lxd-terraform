@@ -54,16 +54,16 @@ resource "nomad_job" "autoscaler" {
   }
 }
 
-# resource "consul_config_entry" "nomad_autoscaler_intention" {
-#   kind = "service-intentions"
-#   name = "prometheus"
+resource "consul_config_entry" "nomad_autoscaler_intention" {
+  kind = "service-intentions"
+  name = "prometheus"
 
-#   config_json = jsonencode({
-#     Sources = [
-#       {
-#         Name   = "autoscaler"
-#         Action = "allow"
-#       }
-#     ]
-#   })
-# }
+  config_json = jsonencode({
+    Sources = [
+      {
+        Name   = "autoscaler"
+        Action = "allow"
+      }
+    ]
+  })
+}

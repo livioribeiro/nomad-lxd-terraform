@@ -28,7 +28,8 @@ tls {
 }
 
 consul {
-  token = "${consul_token}"
+  enabled = true
+  token   = "${consul_token}"
 }
 
 vault {

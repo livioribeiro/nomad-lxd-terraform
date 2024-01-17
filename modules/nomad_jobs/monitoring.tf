@@ -2,9 +2,18 @@ resource "nomad_namespace" "system_monitoring" {
   name = "system-monitoring"
 }
 
+resource "consul_acl_role" "system_monitoring" {
+  name        = "nomad-tasks-${nomad_namespace.system_monitoring.name}"
+  description = "prometheus role"
+
+  policies = [
+    data.consul_acl_policy.nomad_tasks.id,
+  ]
+}
+
 # Prometheus Consul ACL
-resource "consul_acl_policy" "system_monitoring" {
-  name  = "system-monitoring"
+resource "consul_acl_policy" "system_monitoring_prometheus" {
+  name  = "${nomad_namespace.system_monitoring.name}-prometheus"
   rules = <<-EOT
     agent_prefix "" {
       policy = "read"
@@ -25,12 +34,11 @@ resource "consul_acl_policy" "system_monitoring" {
 }
 
 resource "consul_acl_role" "prometheus" {
-  name        = "nomad-tasks-${nomad_namespace.system_monitoring.name}"
+  name        = "nomad-tasks-${nomad_namespace.system_monitoring.name}-prometheus"
   description = "prometheus role"
 
   policies = [
-    consul_acl_policy.system_monitoring.id,
-    data.consul_acl_policy.nomad_tasks.id,
+    consul_acl_policy.system_monitoring_prometheus.id,
   ]
 }
 
@@ -84,10 +92,10 @@ resource "consul_config_entry" "prometheus_intention" {
         Name   = "grafana"
         Action = "allow"
       },
-      {
-        Name   = "autoscaler"
-        Action = "allow"
-      }
+      # {
+      #   Name   = "autoscaler"
+      #   Action = "allow"
+      # }
     ]
   })
 }

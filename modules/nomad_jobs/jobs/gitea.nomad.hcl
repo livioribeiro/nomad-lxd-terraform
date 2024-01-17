@@ -101,25 +101,30 @@ job "gitea" {
 
       config {
         image   = "gitea/gitea:${var.version}"
-        command = "/opt/init.sh"
+        command = "/run/init.sh"
 
         volumes = [
-          "local/secret_key:/var/lib/gitea/secret_key",
-          "local/internal_token:/var/lib/gitea/internal_token",
-          "local/init.sh:/opt/init.sh",
+          "local/init.sh:/run/init.sh"
         ]
       }
 
       template {
+        destination = "local/init.sh"
+        perms       = "755"
+
         data = <<-EOT
           #!/bin/sh
+          set -e
+
           retries=0
           while ! nc -z localhost 5432
           do
             if [ $retries -gt 10 ]; then
+              echo "database unreachable"
               exit 1
             fi
             echo "waiting for database..."
+            retries=$(($retries + 1))
             sleep 3
           done
 
@@ -132,9 +137,6 @@ job "gitea" {
 
           exec /usr/bin/dumb-init -- /usr/local/bin/docker-entrypoint.sh
         EOT
-
-        destination = "local/init.sh"
-        perms       = "755"
       }
 
       env {

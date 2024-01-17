@@ -24,7 +24,8 @@ tls {
 }
 
 consul {
-  token = "${consul_token}"
+  enabled = true
+  token   = "${consul_token}"
 
   service_identity {
     aud = ["consul.io"]

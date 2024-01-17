@@ -2,9 +2,17 @@ resource "nomad_namespace" "system_gateway" {
   name = "system-gateway"
 }
 
+resource "consul_acl_role" "system_gateway" {
+  name        = "nomad-tasks-${nomad_namespace.system_gateway.name}"
+
+  policies = [
+    data.consul_acl_policy.nomad_tasks.id,
+  ]
+}
+
 # Traefik Consul ACL
-resource "consul_acl_policy" "system_gateway" {
-  name  = "system-gateway"
+resource "consul_acl_policy" "system_gateway_traefik" {
+  name  = "${nomad_namespace.system_gateway.name}-traefik"
   rules = <<-EOT
     node_prefix "" {
       policy = "read"
@@ -21,12 +29,11 @@ resource "consul_acl_policy" "system_gateway" {
 }
 
 resource "consul_acl_role" "traefik" {
-  name        = "nomad-tasks-${nomad_namespace.system_gateway.name}"
+  name        = "nomad-tasks-${nomad_namespace.system_gateway.name}-traefik"
   description = "Traefik role"
 
   policies = [
-    consul_acl_policy.system_gateway.id,
-    data.consul_acl_policy.nomad_tasks.id,
+    consul_acl_policy.system_gateway_traefik.id,
   ]
 }
 

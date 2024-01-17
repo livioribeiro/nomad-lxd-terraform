@@ -1,5 +1,5 @@
 resource "nomad_namespace" "gitea" {
-  name = "scm"
+  name = "gitea"
 }
 
 resource "consul_acl_role" "gitea" {
