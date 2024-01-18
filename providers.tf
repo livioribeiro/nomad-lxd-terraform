@@ -15,6 +15,11 @@ terraform {
       version = "~> 1.10"
     }
 
+    packer = {
+      source  = "toowoxx/packer"
+      version = "~> 0.15"
+    }
+
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.0"

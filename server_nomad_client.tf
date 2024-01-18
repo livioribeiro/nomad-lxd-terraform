@@ -1,14 +1,37 @@
+data "packer_files" "nomad_client" {
+  file = "./packer/nomad-client.pkr.hcl"
+  file_dependencies = [
+    "./packer/provision-nomad-client.sh"
+  ]
+}
+
+resource "packer_image" "nomad_client" {
+  name      = "nomad-client"
+  directory = "./packer"
+  file      = "nomad-client.pkr.hcl"
+  force     = true
+
+  triggers = {
+    nomad_client = data.packer_files.nomad_client.files_hash
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "lxc image delete nomad-client"
+  }
+}
+
 locals {
   nomad_apps_clients = [
     for i in range(1, var.nomad_apps_clients_qtd + 1) :
     "nomad-apps-client-${i}"
   ]
 
-  nomad_clients = concat(keys(local.nomad_infra_clients), local.nomad_apps_clients)
+  nomad_clients = merge(local.nomad_infra_clients, { for i in local.nomad_apps_clients : i => null })
 }
 
 resource "consul_acl_token" "nomad_client_agent" {
-  for_each = toset(local.nomad_clients)
+  for_each = local.nomad_clients
 
   node_identities {
     datacenter = "dc1"
@@ -17,7 +40,7 @@ resource "consul_acl_token" "nomad_client_agent" {
 }
 
 data "consul_acl_token_secret_id" "nomad_client_agent" {
-  for_each = toset(local.nomad_clients)
+  for_each = local.nomad_clients
 
   accessor_id = consul_acl_token.nomad_client_agent[each.key].id
 }
@@ -57,7 +80,7 @@ data "consul_acl_token_secret_id" "nomad_client" {
 }
 
 data "cloudinit_config" "nomad_client" {
-  for_each = toset(local.nomad_clients)
+  for_each = local.nomad_clients
 
   gzip          = false
   base64_encode = false
@@ -68,54 +91,20 @@ data "cloudinit_config" "nomad_client" {
 
     content = yamlencode({
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
-      apt = {
-        sources = {
-          hashicorp = local.cloudinit_apt_hashicorp
-          docker    = local.cloudinit_apt_docker
-          getenvoy  = local.cloudinit_apt_getenvoy
-        }
-      }
       packages = [
         "openssh-server",
-        "consul",
-        "nomad",
-        "docker-ce",
-        "containerd.io",
-        "getenvoy-envoy",
-        "nfs-common",
       ]
       runcmd = [
-        "mkdir -p /opt/cni/bin",
-        "wget -q -O /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz",
-        "tar -vxf /tmp/cni-plugins.tgz -C /opt/cni/bin",
-        "chown root.root /opt/cni/bin",
-        "chmod 755 /opt/cni/bin/*",
-        "rm /tmp/cni-plugins.tgz",
-        "usermod -aG docker nomad",
-        "systemctl enable consul nomad docker",
-        "systemctl start consul nomad docker",
-        "systemctl restart systemd-resolved",
-        "docker plugin install grafana/loki-docker-driver:2.9.3 --alias loki --grant-all-permissions",
-        "mount --make-shared /",
+        "systemctl restart docker",
       ]
       write_files = [
-        local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.nomad_client.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.nomad_client.private_key_pem },
         {
-          path    = "/etc/systemd/resolved.conf.d/docker.conf",
-          content = <<-EOT
-            [Resolve]
-            DNSStubListener=yes
-            DNSStubListenerExtra=172.17.0.1
-          EOT
-        },
-        {
           path    = "/etc/docker/daemon.json",
           content = <<-EOT
             {
-              "dns": ["172.17.0.1"],
               "registry-mirrors": [
                 "http://docker-hub-mirror.service.consul:5000"
               ]
@@ -146,10 +135,11 @@ data "cloudinit_config" "nomad_client" {
 }
 
 resource "lxd_instance" "nomad_client" {
-  for_each = merge(local.nomad_infra_clients, { for i in local.nomad_apps_clients : i => null })
+  for_each   = local.nomad_clients
+  depends_on = [lxd_instance.nomad_server]
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = packer_image.nomad_client.name
   type     = "virtual-machine"
   profiles = [lxd_profile.nomad_cluster.name]
 
@@ -169,7 +159,8 @@ resource "lxd_instance" "nomad_client" {
   }
 
   config = {
-    "cloud-init.user-data" = data.cloudinit_config.nomad_client[each.key].rendered
+    "cloud-init.user-data"  = data.cloudinit_config.nomad_client[each.key].rendered
+    "user.access_interface" = "enp5s0"
   }
 
   provisioner "remote-exec" {
