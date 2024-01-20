@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "0.4.0"
+  default = "0.4.1"
 }
 
 variable "namespace" {
@@ -19,7 +19,7 @@ job "autoscaler" {
   namespace = var.namespace
 
   group "autoscaler" {
-    count = 1
+    count = 3
 
     network {
       mode = "bridge"
@@ -87,7 +87,7 @@ job "autoscaler" {
       driver = "docker"
 
       config {
-        image = "alpine/socat:1.7.4.4"
+        image = "alpine/socat:latest"
         args = [
           "tcp-listen:4646,fork,reuseaddr",
           "unix-connect:/secrets/api.sock",
@@ -157,7 +157,8 @@ job "autoscaler" {
           }
 
           high_availability {
-            enabled = false
+            enabled = true
+            lock_namespace = "{{ env "NOMAD_NAMESPACE" }}"
           }
 
           telemetry {
