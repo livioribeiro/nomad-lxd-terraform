@@ -25,7 +25,7 @@ job "autoscaler" {
       mode = "bridge"
 
       port "http" {}
-      port "promtail" {}
+      // port "promtail" {}
     }
 
     service {
@@ -83,28 +83,6 @@ job "autoscaler" {
     #   }
     # }
 
-    task "socat" {
-      driver = "docker"
-
-      config {
-        image = "alpine/socat:latest"
-        args = [
-          "tcp-listen:4646,fork,reuseaddr",
-          "unix-connect:/secrets/api.sock",
-        ]
-      }
-
-      resources {
-        cpu    = 50
-        memory = 32
-      }
-
-      lifecycle {
-        hook    = "prestart"
-        sidecar = true
-      }
-    }
-
     task "autoscaler" {
       driver = "docker"
 
@@ -151,9 +129,8 @@ job "autoscaler" {
 
         data = <<-EOT
           nomad {
-            address   = "http://localhost:4646"
+            address   = "unix:///secrets/api.sock"
             namespace = "*"
-            token     = "{{ env "NOMAD_TOKEN" }}"
           }
 
           high_availability {
