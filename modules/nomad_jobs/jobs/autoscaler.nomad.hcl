@@ -3,11 +3,6 @@ variable "version" {
   default = "0.4.1"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-autoscaling"
-}
-
 # variable "promtail_version" {
 #   type    = string
 #   default = "2.9.1"
@@ -16,7 +11,7 @@ variable "namespace" {
 job "autoscaler" {
   type      = "service"
   node_pool = "all"
-  namespace = var.namespace
+  namespace = "system"
 
   group "autoscaler" {
     count = 3

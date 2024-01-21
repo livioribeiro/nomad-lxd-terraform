@@ -1,22 +1,10 @@
-resource "nomad_namespace" "gitea" {
-  name = "gitea"
-}
-
-resource "consul_acl_role" "gitea" {
-  name        = "nomad-tasks-${nomad_namespace.gitea.name}"
-
-  policies = [
-    data.consul_acl_policy.nomad_tasks.id,
-  ]
-}
-
 resource "nomad_csi_volume" "gitea_data" {
   depends_on = [data.nomad_plugin.nfs]
 
   plugin_id    = "nfs"
   volume_id    = "gitea-data"
   name         = "gitea-data"
-  namespace    = nomad_namespace.gitea.name
+  namespace    = data.nomad_namespace.default.name
   capacity_min = "250MiB"
   capacity_max = "500MiB"
 
@@ -40,7 +28,7 @@ resource "nomad_csi_volume" "gitea_database_data" {
   plugin_id    = "nfs"
   volume_id    = "gitea-database-data"
   name         = "gitea-database-data"
-  namespace    = nomad_namespace.gitea.name
+  namespace    = data.nomad_namespace.default.name
   capacity_min = "250MiB"
   capacity_max = "500MiB"
 
@@ -57,8 +45,8 @@ resource "nomad_csi_volume" "gitea_database_data" {
 }
 
 resource "nomad_variable" "gitea" {
-  path      = "nomad/jobs/${nomad_namespace.gitea.name}/gitea/gitea"
-  namespace = nomad_namespace.gitea.name
+  path      = "nomad/jobs/gitea/gitea/gitea"
+  namespace = data.nomad_namespace.default.name
 
   items = {
     internal_token = "gitea_internal_token"
@@ -80,7 +68,6 @@ resource "nomad_job" "gitea" {
 
   hcl2 {
     vars = {
-      namespace            = nomad_namespace.gitea.name
       data_volume_name     = nomad_csi_volume.gitea_data.name
       database_volume_name = nomad_csi_volume.gitea_database_data.name
       gitea_host           = "gitea.${var.apps_subdomain}.${var.external_domain}"
@@ -91,6 +78,20 @@ resource "nomad_job" "gitea" {
 resource "consul_config_entry" "gitea_database_intention" {
   kind = "service-intentions"
   name = "gitea-database"
+
+  config_json = jsonencode({
+    Sources = [
+      {
+        Name   = "gitea"
+        Action = "allow"
+      }
+    ]
+  })
+}
+
+resource "consul_config_entry" "gitea_cache_intention" {
+  kind = "service-intentions"
+  name = "gitea-cache"
 
   config_json = jsonencode({
     Sources = [

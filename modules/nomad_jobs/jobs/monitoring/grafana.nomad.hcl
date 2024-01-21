@@ -3,15 +3,10 @@ variable "version" {
   default = "9.5.14"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-monitoring"
-}
-
 job "grafana" {
   type      = "service"
   node_pool = "infra"
-  namespace = var.namespace
+  namespace = "system"
 
   group "grafana" {
     count = 1
@@ -22,12 +17,20 @@ job "grafana" {
       port "http" {
         to = 3000
       }
+
+      port "envoy_metrics" {
+        to = 9102
+      }
     }
 
     service {
       name = "grafana"
       port = "http"
       tags = ["traefik.enable=true"]
+
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {

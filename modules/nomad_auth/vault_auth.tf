@@ -56,6 +56,10 @@ resource "vault_policy" "nomad_operator" {
       capabilities = ["create", "read", "update", "patch", "delete", "list"]
     }
 
+    path "secret/nomad/jobs/system" {
+      capabilities = ["deny"]
+    }
+
     path "secret/nomad/jobs/system-*" {
       capabilities = ["deny"]
     }

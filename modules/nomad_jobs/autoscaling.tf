@@ -1,15 +1,3 @@
-resource "nomad_namespace" "system_autoscaling" {
-  name = "system-autoscaling"
-}
-
-resource "consul_acl_role" "system_autoscaling" {
-  name = "nomad-tasks-${nomad_namespace.system_autoscaling.name}"
-
-  policies = [
-    data.consul_acl_policy.nomad_tasks.id,
-  ]
-}
-
 resource "nomad_acl_policy" "nomad_autoscaler" {
   name        = "nomad-autoscaler"
   description = "Nomad Autoscaler"
@@ -23,7 +11,7 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
       policy = "scale"
     }
 
-    namespace "${nomad_namespace.system_autoscaling.name}" {
+    namespace "${nomad_namespace.system.name}" {
       variables {
         path "nomad-autoscaler/lock" {
           capabilities = ["read", "write", "destroy"]
@@ -33,7 +21,7 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
   EOT
 
   job_acl {
-    namespace = nomad_namespace.system_autoscaling.name
+    namespace = nomad_namespace.system.name
     job_id    = "autoscaler"
   }
 }
@@ -43,7 +31,7 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
 # to allow terraform to manage it.
 resource "nomad_variable" "autoscaler_lock" {
   path      = "nomad-autoscaler/lock"
-  namespace = nomad_namespace.system_autoscaling.name
+  namespace = nomad_namespace.system.name
 
   items = {
     # bogus value just to allow the creation of the variable
@@ -66,12 +54,6 @@ resource "nomad_job" "autoscaler" {
 
   jobspec = file("${path.module}/jobs/autoscaler.nomad.hcl")
   # detach = false
-
-  hcl2 {
-    vars = {
-      namespace = nomad_namespace.system_autoscaling.name
-    }
-  }
 }
 
 # resource "consul_config_entry" "nomad_autoscaler_intention" {

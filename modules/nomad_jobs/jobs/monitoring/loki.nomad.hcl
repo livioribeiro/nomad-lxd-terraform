@@ -3,15 +3,10 @@ variable "version" {
   default = "2.9.2"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-monitoring"
-}
-
 job "loki" {
   type      = "service"
   node_pool = "infra"
-  namespace = var.namespace
+  namespace = "system"
 
   group "loki" {
     count = 1
@@ -19,14 +14,22 @@ job "loki" {
     network {
       mode = "bridge"
 
-      port "http" {
-        static = 3100
+      port "loki" {
+        to = 3100
+      }
+
+      port "envoy_metrics" {
+        to = 9102
       }
     }
 
     service {
       name = "loki"
-      port = "3100"
+      port = "${NOMAD_HOST_PORT_loki}"
+
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {}
@@ -40,9 +43,8 @@ job "loki" {
       }
 
       check {
-        name     = "Healthiness Check"
         type     = "http"
-        port     = "http"
+        port     = "loki"
         path     = "/ready"
         interval = "10s"
         timeout  = "5s"
@@ -50,21 +52,6 @@ job "loki" {
         check_restart {
           grace = "10s"
           limit = 5
-        }
-      }
-
-      check {
-        name      = "Readiness Check"
-        type      = "http"
-        port      = "http"
-        path      = "/ready"
-        interval  = "10s"
-        timeout   = "5s"
-        on_update = "ignore_warnings"
-
-        check_restart {
-          grace           = "5s"
-          ignore_warnings = true
         }
       }
     }
@@ -75,7 +62,7 @@ job "loki" {
       config {
         image = "grafana/loki:${var.version}"
         args  = ["-config.file=/local/loki.yaml"]
-        ports = ["http"]
+        ports = ["loki"]
       }
 
       resources {
@@ -92,7 +79,7 @@ job "loki" {
           auth_enabled: false
 
           server:
-            http_listen_port: {{ env "NOMAD_PORT_http" }}
+            http_listen_port: {{ env "NOMAD_PORT_loki" }}
 
           common:
             path_prefix: /tmp/loki

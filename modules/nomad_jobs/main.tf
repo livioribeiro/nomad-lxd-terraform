@@ -1,3 +1,8 @@
-data "consul_acl_policy" "nomad_tasks" {
-  name  = "nomad-tasks"
+resource "nomad_namespace" "system" {
+  name        = "system"
+  description = "Namespace key services of the cluster"
+}
+
+data "nomad_namespace" "default" {
+  name = "default"
 }

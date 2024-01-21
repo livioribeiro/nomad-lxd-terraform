@@ -3,11 +3,6 @@ variable "version" {
   default = "2.8.3"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-registry"
-}
-
 variable "volume_name" {
   type    = string
   default = "docker-hub-proxy-data"
@@ -16,7 +11,7 @@ variable "volume_name" {
 job "docker-hub-mirror" {
   type      = "service"
   node_pool = "infra"
-  namespace = var.namespace
+  namespace = "system"
 
   group "registry" {
     count = 1

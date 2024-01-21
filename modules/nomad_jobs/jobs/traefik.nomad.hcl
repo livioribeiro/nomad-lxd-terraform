@@ -3,11 +3,6 @@ variable "version" {
   default = "v3.0"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-gateway"
-}
-
 variable "proxy_suffix" {
   type    = string
   default = ""
@@ -16,7 +11,7 @@ variable "proxy_suffix" {
 job "traefik" {
   type      = "system"
   node_pool = "infra"
-  namespace = var.namespace
+  namespace = "system"
 
   group "traefik" {
     network {
