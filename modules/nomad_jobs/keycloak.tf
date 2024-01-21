@@ -1,24 +1,10 @@
-resource "nomad_namespace" "sso" {
-  name = "sso"
-}
-
-resource "consul_acl_role" "sso" {
-  name        = "nomad-tasks-${nomad_namespace.sso.name}"
-
-  policies = [
-    data.consul_acl_policy.nomad_tasks.id,
-  ]
-}
-
 resource "nomad_csi_volume" "keycloak_database_data" {
-  depends_on = [
-    data.nomad_plugin.nfs
-  ]
+  depends_on = [data.nomad_plugin.nfs]
 
   plugin_id    = "nfs"
   volume_id    = "keycloak-database-data"
   name         = "keycloak-database-data"
-  namespace    = nomad_namespace.sso.name
+  namespace    = data.nomad_namespace.default.name
   capacity_min = "500MiB"
   capacity_max = "750MiB"
 
@@ -36,7 +22,6 @@ resource "nomad_job" "keycloak" {
 
   hcl2 {
     vars = {
-      namespace       = nomad_namespace.sso.name
       volume_name     = nomad_csi_volume.keycloak_database_data.name
       external_domain = var.external_domain
       apps_subdomain  = var.apps_subdomain

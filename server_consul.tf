@@ -18,12 +18,6 @@ data "cloudinit_config" "consul_server" {
         }
       }
       packages = ["openssh-server", "consul"]
-      runcmd = [
-        "systemctl enable consul",
-        "systemctl start consul",
-        "systemctl restart systemd-resolved",
-        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
-      ]
       write_files = [
         local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
@@ -37,6 +31,12 @@ data "cloudinit_config" "consul_server" {
             }
           )
         },
+      ]
+      runcmd = [
+        "systemctl enable consul",
+        "systemctl start consul",
+        "systemctl restart systemd-resolved",
+        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} nomad.${var.external_domain}' >> /etc/hosts; fi",
       ]
     })
   }

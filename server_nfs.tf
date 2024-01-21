@@ -12,18 +12,18 @@ data "cloudinit_config" "nfs_server" {
         "openssh-server",
         "nfs-kernel-server",
       ]
-      runcmd = [
-        "mkdir /srv/nomad",
-        "systemctl enable nfs-server",
-        "systemctl start nfs-server",
-        "exportfs -a",
-      ]
       write_files = [
         {
           path    = "/etc/exports"
           content = "/srv/nomad *(rw,sync,no_subtree_check,no_root_squash)"
           defer   = true
         }
+      ]
+      runcmd = [
+        "mkdir /srv/nomad",
+        "systemctl enable nfs-server",
+        "systemctl start nfs-server",
+        "exportfs -a",
       ]
     })
   }

@@ -40,6 +40,10 @@ resource "nomad_acl_policy" "operator" {
   name        = "operator"
   description = "Nomad Operator"
   rules_hcl   = <<-EOT
+    namespace "system" {
+      policy = "deny"
+    }
+
     namespace "system-*" {
       policy = "deny"
     }

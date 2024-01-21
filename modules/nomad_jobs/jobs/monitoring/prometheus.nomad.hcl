@@ -3,15 +3,10 @@ variable "version" {
   default = "v2.48.0"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-monitoring"
-}
-
 job "prometheus" {
   type      = "service"
   node_pool = "infra"
-  namespace = var.namespace
+  namespace = "system"
 
   group "prometheus" {
     count = 1
@@ -29,12 +24,20 @@ job "prometheus" {
       port "prometheus" {
         static = 9090
       }
+
+      port "envoy_metrics" {
+        to = 9102
+      }
     }
 
     service {
       name = "prometheus"
+      port = "${NOMAD_HOST_PORT_prometheus}"
       tags = ["traefik.enable=true"]
-      port = "${NOMAD_PORT_prometheus}"
+
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {
@@ -52,6 +55,7 @@ job "prometheus" {
       check {
         name     = "prometheus port alive"
         type     = "http"
+        port     = "prometheus"
         path     = "/-/healthy"
         interval = "10s"
         timeout  = "2s"
@@ -211,13 +215,6 @@ job "prometheus" {
             - server: '{{ env "attr.unique.network.ip-address" }}:8500'
               token: '{{ env "CONSUL_TOKEN" }}'
               services: [traefik]
-
-          # GITEA
-          - job_name: gitea_metrics
-            consul_sd_configs:
-            - server: '{{ env "attr.unique.network.ip-address" }}:8500'
-              token: '{{ env "CONSUL_TOKEN" }}'
-              services: [gitea]
 
           # CONSUL CONNECT ENVOY
           # https://www.mattmoriarity.com/2021-02-21-scraping-prometheus-metrics-with-nomad-and-consul-connect/

@@ -3,11 +3,6 @@ variable "version" {
   default = "1.21-rootless"
 }
 
-variable "namespace" {
-  type    = string
-  default = "scm"
-}
-
 variable "gitea_host" {
   type    = string
   default = ""
@@ -25,7 +20,7 @@ variable "database_volume_name" {
 
 job "gitea" {
   type      = "service"
-  namespace = var.namespace
+  namespace = "default"
 
   group "gitea" {
     count = 1
@@ -40,22 +35,31 @@ job "gitea" {
       port "http" {
         to = 3000
       }
+
+      port "envoy_metrics" {
+        to = 9102
+      }
     }
 
     service {
       name = "gitea"
       port = "3000"
+
       tags = [
         "traefik.enable=true",
         "traefik.consulcatalog.connect=true",
       ]
 
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
+
       check {
         name     = "api-health"
         expose   = true
         type     = "http"
-        path     = "/api/healthz"
         port     = "http"
+        path     = "/api/healthz"
         interval = "10s"
         timeout  = "5s"
 
@@ -214,6 +218,14 @@ job "gitea" {
       max_parallel = 0
     }
 
+    network {
+      mode = "bridge"
+
+      port "envoy_metrics" {
+        to = 9102
+      }
+    }
+
     volume "data" {
       type            = "csi"
       source          = var.database_volume_name
@@ -222,12 +234,12 @@ job "gitea" {
       access_mode     = "single-node-writer"
     }
 
-    network {
-      mode = "bridge"
-    }
-
     service {
       port = "5432"
+
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {}
@@ -271,10 +283,18 @@ job "gitea" {
 
     network {
       mode = "bridge"
+
+      port "envoy_metrics" {
+        to = 9102
+      }
     }
 
     service {
       port = "6379"
+
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {}

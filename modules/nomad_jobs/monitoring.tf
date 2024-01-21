@@ -1,19 +1,6 @@
-resource "nomad_namespace" "system_monitoring" {
-  name = "system-monitoring"
-}
-
-resource "consul_acl_role" "system_monitoring" {
-  name        = "nomad-tasks-${nomad_namespace.system_monitoring.name}"
-  description = "prometheus role"
-
-  policies = [
-    data.consul_acl_policy.nomad_tasks.id,
-  ]
-}
-
 # Prometheus Consul ACL
 resource "consul_acl_policy" "system_monitoring_prometheus" {
-  name  = "${nomad_namespace.system_monitoring.name}-prometheus"
+  name  = "${nomad_namespace.system.name}-prometheus"
   rules = <<-EOT
     agent_prefix "" {
       policy = "read"
@@ -34,7 +21,7 @@ resource "consul_acl_policy" "system_monitoring_prometheus" {
 }
 
 resource "consul_acl_role" "prometheus" {
-  name        = "nomad-tasks-${nomad_namespace.system_monitoring.name}-prometheus"
+  name        = "nomad-tasks-${nomad_namespace.system.name}-prometheus"
   description = "prometheus role"
 
   policies = [
@@ -47,12 +34,6 @@ resource "nomad_job" "prometheus" {
 
   jobspec = file("${path.module}/jobs/monitoring/prometheus.nomad.hcl")
   # detach = false
-
-  hcl2 {
-    vars = {
-      namespace = nomad_namespace.system_monitoring.name
-    }
-  }
 }
 
 resource "nomad_job" "loki" {
@@ -60,12 +41,6 @@ resource "nomad_job" "loki" {
 
   jobspec = file("${path.module}/jobs/monitoring/loki.nomad.hcl")
   # detach = false
-
-  hcl2 {
-    vars = {
-      namespace = nomad_namespace.system_monitoring.name
-    }
-  }
 }
 
 # Grafana
@@ -74,12 +49,6 @@ resource "nomad_job" "grafana" {
 
   jobspec = file("${path.module}/jobs/monitoring/grafana.nomad.hcl")
   # detach = false
-
-  hcl2 {
-    vars = {
-      namespace = nomad_namespace.system_monitoring.name
-    }
-  }
 }
 
 resource "consul_config_entry" "prometheus_intention" {

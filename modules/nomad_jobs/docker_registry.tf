@@ -1,24 +1,10 @@
-resource "nomad_namespace" "system_registry" {
-  name = "system-registry"
-}
-
-resource "consul_acl_role" "system_registry" {
-  name        = "nomad-tasks-${nomad_namespace.system_registry.name}"
-
-  policies = [
-    data.consul_acl_policy.nomad_tasks.id,
-  ]
-}
-
 resource "nomad_csi_volume" "docker_hub_proxy_data" {
-  depends_on = [
-    data.nomad_plugin.nfs
-  ]
+  depends_on = [data.nomad_plugin.nfs]
 
   plugin_id    = "nfs"
   volume_id    = "docker-hub-proxy-data"
   name         = "docker-hub-proxy-data"
-  namespace    = nomad_namespace.system_registry.name
+  namespace    = nomad_namespace.system.name
   capacity_min = "12GiB"
   capacity_max = "16GiB"
 
@@ -34,7 +20,6 @@ resource "nomad_job" "docker_registry" {
 
   hcl2 {
     vars = {
-      namespace   = nomad_namespace.system_registry.name
       volume_name = nomad_csi_volume.docker_hub_proxy_data.name
     }
   }

@@ -14,6 +14,10 @@ module "nomad_consul_setup" {
 
   nomad_jwks_url   = "http://nomad.${var.external_domain}/.well-known/jwks.json"
   auth_method_name = local.auth_method_name
+  nomad_namespaces = [
+    "system",
+    "default",
+  ]
 }
 
 data "consul_acl_auth_method" "nomad" {

@@ -8,11 +8,6 @@ variable "postgres_version" {
   default = "16.1-alpine"
 }
 
-variable "namespace" {
-  type    = string
-  default = "sso"
-}
-
 variable "volume_name" {
   type    = string
   default = "keycloak-database-data"
@@ -32,7 +27,7 @@ variable "realm_import" {
 
 job "keycloak" {
   type      = "service"
-  namespace = var.namespace
+  namespace = "default"
 
   group "keycloak" {
     count = 1
@@ -128,6 +123,7 @@ job "keycloak" {
         KC_DB_URL_DATABASE       = "keycloak"
         KC_DB_USERNAME           = "keycloak"
         KC_DB_PASSWORD           = "keycloak"
+        KC_METRICS_ENABLED       = "true"
         JAVA_OPTS_APPEND         = "-Djgroups.dns.query=keycloak.service.consul"
         KEYCLOAK_ADMIN           = "admin"
         KEYCLOAK_ADMIN_PASSWORD  = "admin"
@@ -162,10 +158,18 @@ job "keycloak" {
 
     network {
       mode = "bridge"
+
+      port "envoy_metrics" {
+        to = 9102
+      }
     }
 
     service {
       port = "5432"
+
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {}

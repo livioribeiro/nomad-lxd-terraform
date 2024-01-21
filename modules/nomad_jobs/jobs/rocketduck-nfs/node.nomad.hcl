@@ -3,11 +3,6 @@ variable "version" {
   default = "0.7.0"
 }
 
-variable "namespace" {
-  type    = string
-  default = "system-storage"
-}
-
 variable "nfs_server_host" {
   type    = string
   default = ""
@@ -16,7 +11,7 @@ variable "nfs_server_host" {
 job "storage-node" {
   type      = "system"
   node_pool = "all"
-  namespace = var.namespace
+  namespace = "system"
 
   group "node" {
     task "node" {

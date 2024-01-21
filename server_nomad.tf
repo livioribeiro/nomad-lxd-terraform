@@ -71,18 +71,6 @@ data "cloudinit_config" "nomad_server" {
         }
       }
       packages = ["openssh-server", "consul", "nomad"]
-      runcmd = [
-        "mkdir -p /opt/nomad/data && chown -R nomad:nomad /opt/nomad",
-        "sed -i '/\\[Service\\]/a User=nomad' /usr/lib/systemd/system/nomad.service",
-        "systemctl daemon-reload",
-        "systemctl enable consul nomad",
-        "systemctl start consul nomad",
-        "systemctl restart systemd-resolved",
-        "ln -s /etc/certs.d/ca.pem /usr/local/share/ca-certificates/nomad-cluster.crt",
-        "update-ca-certificates",
-        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} vault.${var.external_domain}' >> /etc/hosts; fi",
-        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} keycloak.${var.apps_subdomain}.${var.external_domain}' >> /etc/hosts; fi",
-      ]
       write_files = [
         local.cloudinit_consul_dns,
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
@@ -106,6 +94,18 @@ data "cloudinit_config" "nomad_server" {
             }
           )
         },
+      ]
+      runcmd = [
+        "mkdir -p /opt/nomad/data && chown -R nomad:nomad /opt/nomad",
+        "sed -i '/\\[Service\\]/a User=nomad' /usr/lib/systemd/system/nomad.service",
+        "systemctl daemon-reload",
+        "systemctl enable consul nomad",
+        "systemctl start consul nomad",
+        "systemctl restart systemd-resolved",
+        "ln -s /etc/certs.d/ca.pem /usr/local/share/ca-certificates/nomad-cluster.crt",
+        "update-ca-certificates",
+        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} vault.${var.external_domain}' >> /etc/hosts; fi",
+        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} keycloak.${var.apps_subdomain}.${var.external_domain}' >> /etc/hosts; fi",
       ]
     })
   }
