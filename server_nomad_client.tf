@@ -17,17 +17,20 @@ resource "packer_image" "nomad_client" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "lxc image delete nomad-client"
+    command = "lxc image delete ${self.name}"
   }
 }
 
 locals {
-  nomad_apps_clients = [
-    for i in range(1, var.nomad_apps_clients_qtd + 1) :
-    "nomad-apps-client-${i}"
-  ]
+  nomad_clients = merge(local.nomad_infra_clients, local.nomad_apps_clients)
 
-  nomad_clients = merge(local.nomad_infra_clients, { for i in local.nomad_apps_clients : i => null })
+  docker_daemon_json = <<-EOT
+    {
+      "registry-mirrors": [
+        "http://docker-hub-mirror.service.consul:5000"
+      ]
+    }
+  EOT
 }
 
 resource "consul_acl_token" "nomad_client_agent" {
@@ -93,24 +96,12 @@ data "cloudinit_config" "nomad_client" {
       ssh_authorized_keys = [tls_private_key.ssh_nomad_cluster.public_key_openssh]
       packages = [
         "openssh-server",
-      ]
-      runcmd = [
-        "systemctl restart docker",
-      ]
+      ],
       write_files = [
         { path = "/etc/certs.d/ca.pem", content = tls_self_signed_cert.nomad_cluster.cert_pem },
         { path = "/etc/certs.d/cert.pem", content = tls_locally_signed_cert.nomad_client.cert_pem },
         { path = "/etc/certs.d/key.pem", content = tls_private_key.nomad_client.private_key_pem },
-        {
-          path    = "/etc/docker/daemon.json",
-          content = <<-EOT
-            {
-              "registry-mirrors": [
-                "http://docker-hub-mirror.service.consul:5000"
-              ]
-            }
-          EOT
-        },
+        { path = "/etc/docker/daemon.json", content = local.docker_daemon_json },
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
@@ -129,7 +120,12 @@ data "cloudinit_config" "nomad_client" {
             }
           )
         },
-      ]
+      ],
+      runcmd = [
+        "systemctl restart docker",
+        "systemctl start consul",
+        "systemctl start nomad",
+      ],
     })
   }
 }

@@ -16,6 +16,11 @@ locals {
     "nomad-infra-client-${i}" => cidrhost(var.base_network, 40 + i)
   }
 
+  nomad_apps_clients = {
+    for i in range(1, var.nomad_apps_clients_qtd + 1) :
+    "nomad-apps-client-${i}" => cidrhost(var.base_network, 256 + i)
+  }
+
   nfs_server    = { name = "nfs-server", host = cidrhost(var.base_network, 200) }
   load_balancer = { name = "load-balancer", host = cidrhost(var.base_network, 254) }
 }

@@ -1,8 +1,8 @@
 # Hashicorp Nomad cluster with Terraform, LXD and Ansible
 
 Terraform configuration to create a [Nomad](https://www.nomadproject.io) cluster
-in [LXD](https://linuxcontainers.org/#LXD) using [Terraform](https://www.terraform.io)
-and [Ansible](https://www.ansible.com/)
+in [LXD](https://linuxcontainers.org/#LXD) using [Terraform](https://www.terraform.io),
+[Ansible](https://www.ansible.com/) and [Packer](https://www.packer.io/)
 
 After deploying, the following urls will be available:
 
@@ -19,6 +19,9 @@ The cluster contains the following nodes:
 - 5 Nomad client nodes (3 "apps" nodes, 2 "infra" node)
 - 1 NFS server node
 - 1 Load Balancer node running HAProxy
+
+Packer is used to build a nomad client image. Since the nomad clients significantly
+outnumber the other servers, it makes sense to create an image to deploy them.
 
 Consul is used to bootstrap the Nomad cluster, for service discovery and service mesh.
 

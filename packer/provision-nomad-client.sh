@@ -27,9 +27,6 @@ echo $SOURCE_GETENVOY > /etc/apt/sources.list.d/getenvoy.list
 apt-get -q update
 apt-get -q -y install consul nomad docker-ce containerd.io getenvoy-envoy nfs-common
 
-systemctl enable consul
-systemctl enable nomad
-
 mkdir -p /etc/systemd/resolved.conf.d
 cat <<EOF > /etc/systemd/resolved.conf.d/consul.conf
 [Resolve]
@@ -55,5 +52,3 @@ apt-get -q -y autoclean
 
 # install loki logging driver
 docker plugin install grafana/loki-docker-driver:$LOKI_DRIVER_VERSION --alias loki --grant-all-permissions
-
-mount --make-shared /

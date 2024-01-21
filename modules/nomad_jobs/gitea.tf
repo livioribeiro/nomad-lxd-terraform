@@ -56,8 +56,24 @@ resource "nomad_csi_volume" "gitea_database_data" {
   }
 }
 
+resource "nomad_variable" "gitea" {
+  path      = "nomad/jobs/${nomad_namespace.gitea.name}/gitea/gitea"
+  namespace = nomad_namespace.gitea.name
+
+  items = {
+    internal_token = "gitea_internal_token"
+    secret_key     = "gitea_secret_key"
+    root_username  = "root"
+    root_password  = "Password123"
+    root_email     = "root@example.com"
+  }
+}
+
 resource "nomad_job" "gitea" {
-  depends_on = [nomad_job.docker_registry]
+  depends_on = [
+    nomad_job.docker_registry,
+    nomad_variable.gitea,
+  ]
 
   jobspec = file("${path.module}/jobs/gitea.nomad.hcl")
   # detach = false
