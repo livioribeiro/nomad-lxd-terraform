@@ -108,6 +108,58 @@ job "gitea" {
         ]
       }
 
+      env {
+        GITEA__server__HTTP_PORT                  = "${NOMAD_PORT_http}"
+        GITEA__server__DOMAIN                     = "${var.gitea_host}"
+        GITEA__server__ROOT_URL                   = "http://${var.gitea_host}/"
+        GITEA__security__INSTALL_LOCK             = "true"
+        GITEA__security__INTERNAL_TOKEN_URI       = "file:/secrets/internal_token"
+        GITEA__security__SECRET_KEY_URI           = "file:/secrets/secret_key"
+        GITEA__security__DISABLE_QUERY_AUTH_TOKEN = "true"
+        GITEA__database__DB_TYPE                  = "postgres"
+        GITEA__database__HOST                     = "localhost:5432"
+        GITEA__database__NAME                     = "gitea"
+        GITEA__database__USER                     = "gitea"
+        GITEA__database__PASSWD                   = "gitea"
+        GITEA__cache__ADAPTER                     = "redis"
+        GITEA__cache__HOST                        = "redis://localhost:6379/0"
+        GITEA__queue__TYPE                        = "redis"
+        GITEA__queue__CONN_STR                    = "redis://localhost:6379/1"
+        GITEA__session__PROVIDER                  = "redis"
+        GITEA__session__PROVIDER_CONFIG           = "redis://localhost:6379/2"
+        GITEA__log__LEVEL                         = "Warn"
+        GITEA__actions__ENABLED                   = "true"
+        GITEA__metrics__ENABLED                   = "true"
+      }
+
+      template {
+        destination = "/secrets/internal_token"
+
+        data = <<-EOT
+          {{ with nomadVar "nomad/jobs/gitea/gitea/gitea" }}{{ .internal_token }}{{ end }}
+        EOT
+      }
+
+      template {
+        destination = "/secrets/secret_key"
+
+        data = <<-EOT
+          {{ with nomadVar "nomad/jobs/gitea/gitea/gitea" }}{{ .secret_key }}{{ end }}
+        EOT
+      }
+
+      template {
+        destination = "/secrets/root_user"
+
+        data = <<-EOT
+          {{ with nomadVar "nomad/jobs/gitea/gitea/gitea" }}
+          ROOT_USERNAME='{{ .root_username }}'
+          ROOT_PASSWORD='{{ .root_password }}'
+          ROOT_EMAIL='{{ .root_email }}'
+          {{ end }}
+        EOT
+      }
+
       template {
         destination = "local/init.sh"
         perms       = "755"
@@ -130,37 +182,17 @@ job "gitea" {
 
           gitea migrate
 
-          if [ -z "$(gitea admin user list --admin | grep root@example.com)" ]
+          if [ 2 -gt "$(gitea admin user list --admin | wc -l)" ]
           then
-            gitea admin user create --admin --username root --password Password123 --email root@example.com
+            source /secrets/root_user
+            gitea admin user create --admin \
+              --username "$ROOT_USERNAME" \
+              --password "$ROOT_PASSWORD" \
+              --email "$ROOT_EMAIL"
           fi
 
           exec /usr/bin/dumb-init -- /usr/local/bin/docker-entrypoint.sh
         EOT
-      }
-
-      env {
-        GITEA__server__HTTP_PORT                  = "${NOMAD_PORT_http}"
-        GITEA__server__DOMAIN                     = "${var.gitea_host}"
-        GITEA__server__ROOT_URL                   = "http://${var.gitea_host}/"
-        GITEA__security__INSTALL_LOCK             = "true"
-        GITEA__security__INTERNAL_TOKEN           = "gitea_internal_token"
-        GITEA__security__SECRET_KEY               = "gitea_secret_key"
-        GITEA__security__DISABLE_QUERY_AUTH_TOKEN = "true"
-        GITEA__database__DB_TYPE                  = "postgres"
-        GITEA__database__HOST                     = "localhost:5432"
-        GITEA__database__NAME                     = "gitea"
-        GITEA__database__USER                     = "gitea"
-        GITEA__database__PASSWD                   = "gitea"
-        GITEA__cache__ADAPTER                     = "redis"
-        GITEA__cache__HOST                        = "redis://localhost:6379/0"
-        GITEA__queue__TYPE                        = "redis"
-        GITEA__queue__CONN_STR                    = "redis://localhost:6379/1"
-        GITEA__session__PROVIDER                  = "redis"
-        GITEA__session__PROVIDER_CONFIG           = "redis://localhost:6379/2"
-        GITEA__log__LEVEL                         = "Warn"
-        GITEA__actions__ENABLED                   = "true"
-        GITEA__metrics__ENABLED                   = "true"
       }
 
       resources {

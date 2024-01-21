@@ -185,7 +185,7 @@ job "prometheus" {
               regex: '(.*)http(.*)'
             - action: labelmap
               regex: exported_job
-              replacement: nomad_job
+              replacement: job_name
 
             scrape_interval: 5s
             metrics_path: /v1/metrics

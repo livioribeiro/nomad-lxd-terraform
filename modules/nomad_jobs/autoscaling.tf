@@ -3,7 +3,7 @@ resource "nomad_namespace" "system_autoscaling" {
 }
 
 resource "consul_acl_role" "system_autoscaling" {
-  name        = "nomad-tasks-${nomad_namespace.system_autoscaling.name}"
+  name = "nomad-tasks-${nomad_namespace.system_autoscaling.name}"
 
   policies = [
     data.consul_acl_policy.nomad_tasks.id,
@@ -38,10 +38,30 @@ resource "nomad_acl_policy" "nomad_autoscaler" {
   }
 }
 
+# the autoscaler lock will prevent terraform from destroying
+# the namespace, so we explicitly declare the lock variable
+# to allow terraform to manage it.
+resource "nomad_variable" "autoscaler_lock" {
+  path      = "nomad-autoscaler/lock"
+  namespace = nomad_namespace.system_autoscaling.name
+
+  items = {
+    # bogus value just to allow the creation of the variable
+    lock = "lock"
+  }
+
+  lifecycle {
+    # ignore changes to the `items` value, so later executions
+    # of `terraform apply` do not fail
+    ignore_changes = [items]
+  }
+}
+
 resource "nomad_job" "autoscaler" {
   depends_on = [
     nomad_job.docker_registry,
     nomad_acl_policy.nomad_autoscaler,
+    nomad_variable.autoscaler_lock,
   ]
 
   jobspec = file("${path.module}/jobs/autoscaler.nomad.hcl")
@@ -54,16 +74,16 @@ resource "nomad_job" "autoscaler" {
   }
 }
 
-resource "consul_config_entry" "nomad_autoscaler_intention" {
-  kind = "service-intentions"
-  name = "prometheus"
+# resource "consul_config_entry" "nomad_autoscaler_intention" {
+#   kind = "service-intentions"
+#   name = "prometheus"
 
-  config_json = jsonencode({
-    Sources = [
-      {
-        Name   = "autoscaler"
-        Action = "allow"
-      }
-    ]
-  })
-}
+#   config_json = jsonencode({
+#     Sources = [
+#       {
+#         Name   = "autoscaler"
+#         Action = "allow"
+#       }
+#     ]
+#   })
+# }

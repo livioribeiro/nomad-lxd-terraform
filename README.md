@@ -1,8 +1,8 @@
 # Hashicorp Nomad cluster with Terraform, LXD and Ansible
 
 Terraform configuration to create a [Nomad](https://www.nomadproject.io) cluster
-in [LXD](https://linuxcontainers.org/#LXD) using [Terraform](https://www.terraform.io)
-and [Ansible](https://www.ansible.com/)
+in [LXD](https://linuxcontainers.org/#LXD) using [Terraform](https://www.terraform.io),
+[Ansible](https://www.ansible.com/) and [Packer](https://www.packer.io/)
 
 After deploying, the following urls will be available:
 
@@ -10,6 +10,8 @@ After deploying, the following urls will be available:
 - http://nomad.localhost
 - http://consul.localhost
 - http://vault.localhost
+
+Root tokens for Consul, Vault and Nomad will be available at `.tmp/root_token_{consul,vault,nomad}.txt`.
 
 The cluster contains the following nodes:
 
@@ -40,3 +42,8 @@ with passwords equal to their respective usernames.
 ## NFS and CSI Plugin
 
 For storage with the NFS node, a CSI plugin will be configured using the [RocketDuck CSI plugin](https://gitlab.com/rocketduck/csi-plugin-nfs).
+
+## Packer
+
+Packer is used to build a nomad client lxd image. Since the nomad clients significantly
+outnumber other servers, it makes sense to create an image to deploy them.

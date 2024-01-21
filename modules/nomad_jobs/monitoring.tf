@@ -92,10 +92,10 @@ resource "consul_config_entry" "prometheus_intention" {
         Name   = "grafana"
         Action = "allow"
       },
-      # {
-      #   Name   = "autoscaler"
-      #   Action = "allow"
-      # }
+      {
+        Name   = "autoscaler"
+        Action = "allow"
+      }
     ]
   })
 }
