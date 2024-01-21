@@ -11,6 +11,8 @@ After deploying, the following urls will be available:
 - http://consul.localhost
 - http://vault.localhost
 
+Root tokens for Consul, Vault and Nomad will be available at `.tmp/root_token_{consul,vault,nomad}.txt`.
+
 The cluster contains the following nodes:
 
 - 3 Consul nodes
@@ -19,9 +21,6 @@ The cluster contains the following nodes:
 - 5 Nomad client nodes (3 "apps" nodes, 2 "infra" node)
 - 1 NFS server node
 - 1 Load Balancer node running HAProxy
-
-Packer is used to build a nomad client image. Since the nomad clients significantly
-outnumber the other servers, it makes sense to create an image to deploy them.
 
 Consul is used to bootstrap the Nomad cluster, for service discovery and service mesh.
 
@@ -43,3 +42,8 @@ with passwords equal to their respective usernames.
 ## NFS and CSI Plugin
 
 For storage with the NFS node, a CSI plugin will be configured using the [RocketDuck CSI plugin](https://gitlab.com/rocketduck/csi-plugin-nfs).
+
+## Packer
+
+Packer is used to build a nomad client lxd image. Since the nomad clients significantly
+outnumber other servers, it makes sense to create an image to deploy them.
