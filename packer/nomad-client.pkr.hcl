@@ -23,7 +23,7 @@ variable "loki_log_driver_version" {
 }
 
 source "lxd" "nomad-client" {
-  image           = "images:ubuntu/${var.ubuntu_version}/cloud"
+  image           = "ubuntu:${var.ubuntu_version}"
   container_name  = "packer-nomad-client"
   output_image    = "nomad-client"
   virtual_machine = true

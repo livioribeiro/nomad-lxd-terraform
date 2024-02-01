@@ -54,7 +54,7 @@ resource "lxd_instance" "consul_server" {
   for_each = local.consul_servers
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = "ubuntu:${var.ubuntu_version}"
   profiles = [lxd_profile.nomad_cluster.name]
 
   device {

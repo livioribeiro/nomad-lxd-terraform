@@ -37,7 +37,7 @@ resource "lxd_volume" "nfs_server_data" {
 
 resource "lxd_instance" "nfs_server" {
   name     = local.nfs_server["name"]
-  image    = var.ubuntu_image
+  image    = "ubuntu:${var.ubuntu_version}"
   profiles = [lxd_profile.nomad_cluster.name]
 
   device {

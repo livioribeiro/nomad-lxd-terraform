@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "2.9.2"
+  default = "2.9.4"
 }
 
 job "loki" {

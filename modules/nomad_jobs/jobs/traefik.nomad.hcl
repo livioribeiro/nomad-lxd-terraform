@@ -5,7 +5,7 @@ variable "version" {
 
 variable "proxy_suffix" {
   type    = string
-  default = ""
+  default = "apps.localhost"
 }
 
 job "traefik" {

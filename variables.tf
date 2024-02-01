@@ -3,11 +3,6 @@ variable "ubuntu_version" {
   default = "jammy"
 }
 
-variable "ubuntu_image" {
-  type    = string
-  default = "images:ubuntu/jammy/cloud"
-}
-
 variable "base_network" {
   type    = string
   default = "10.99.0.0/16"

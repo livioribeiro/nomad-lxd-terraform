@@ -12,7 +12,7 @@ terraform {
 
     lxd = {
       source  = "terraform-lxd/lxd"
-      version = "~> 1.10"
+      version = "~> 2.0"
     }
 
     packer = {

@@ -123,7 +123,7 @@ resource "lxd_instance" "nomad_server" {
   for_each = local.nomad_servers
 
   name     = each.key
-  image    = var.ubuntu_image
+  image    = "ubuntu:${var.ubuntu_version}"
   profiles = [lxd_profile.nomad_cluster.name]
 
   device {
