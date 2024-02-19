@@ -15,14 +15,13 @@ data "cloudinit_config" "nfs_server" {
       write_files = [
         {
           path    = "/etc/exports"
-          content = "/srv/nomad *(rw,sync,no_subtree_check,no_root_squash)"
+          content = "/srv/nomad *(rw,fsid=0,async,no_subtree_check,no_auth_nlm,insecure,no_root_squash)"
           defer   = true
         }
       ]
       runcmd = [
-        "mkdir /srv/nomad",
         "systemctl enable nfs-server",
-        "systemctl start nfs-server",
+        "systemctl restart nfs-server",
         "exportfs -a",
       ]
     })
@@ -63,7 +62,12 @@ resource "lxd_instance" "nfs_server" {
   config = {
     "cloud-init.user-data" = data.cloudinit_config.nfs_server.rendered
     "security.privileged"  = true
-    "raw.apparmor"         = "mount fstype=rpc_pipefs, mount fstype=nfsd,"
+    "security.nesting"     = true
+    "raw.apparmor"         = <<-EOT
+      mount fstype=nfs*,
+      mount fstype=rpc_pipefs,
+      mount fstype=cgroup -> /sys/fs/cgroup/**,
+    EOT
   }
 
   provisioner "remote-exec" {

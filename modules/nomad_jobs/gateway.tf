@@ -25,16 +25,6 @@ resource "consul_acl_role" "traefik" {
   ]
 }
 
-resource "consul_acl_token" "traefik" {
-  description = "Traefik acl token"
-  roles       = [consul_acl_role.traefik.name]
-  local       = true
-}
-
-data "consul_acl_token_secret_id" "traefik" {
-  accessor_id = consul_acl_token.traefik.id
-}
-
 resource "nomad_job" "proxy" {
   depends_on = [nomad_job.docker_registry]
 

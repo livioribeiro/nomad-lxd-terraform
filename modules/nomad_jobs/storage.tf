@@ -2,7 +2,7 @@ resource "nomad_job" "rocketduck_nfs_controller" {
   depends_on = [nomad_namespace.system]
 
   jobspec = file("${path.module}/jobs/rocketduck-nfs/controller.nomad.hcl")
-  # detach = false
+  detach  = false
 
   hcl2 {
     vars = {
@@ -15,7 +15,7 @@ resource "nomad_job" "rocketduck_nfs_node" {
   depends_on = [nomad_namespace.system]
 
   jobspec = file("${path.module}/jobs/rocketduck-nfs/node.nomad.hcl")
-  # detach = false
+  detach  = false
 
   hcl2 {
     vars = {

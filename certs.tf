@@ -97,7 +97,7 @@ resource "tls_locally_signed_cert" "consul_client" {
   ]
 }
 
-# # Vault
+# Vault
 resource "tls_private_key" "vault" {
   algorithm = "RSA"
   rsa_bits  = 4096
