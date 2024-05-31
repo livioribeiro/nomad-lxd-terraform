@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "0.4.1"
+  default = "0.4"
 }
 
 # variable "promtail_version" {

@@ -25,7 +25,7 @@ resource "nomad_job" "keycloak" {
       volume_name     = nomad_csi_volume.keycloak_database_data.name
       external_domain = var.external_domain
       apps_subdomain  = var.apps_subdomain
-      realm_import    = templatefile("${path.module}/keycloak-realm.json.tpl", {
+      realm_import = templatefile("${path.module}/keycloak-realm.json.tpl", {
         external_domain = var.external_domain
       })
     }

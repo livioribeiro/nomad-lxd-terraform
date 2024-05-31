@@ -1,4 +1,1 @@
-
-
-
-
+# https://atodorov.me/2021/07/09/logging-on-nomad-and-log-aggregation-with-loki/#how-logs-on-nomad-work

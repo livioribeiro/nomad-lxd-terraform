@@ -1,4 +1,4 @@
-data_dir       = "/opt/consul/data"
+data_dir       = "/opt/consul"
 server         = true
 advertise_addr = "{{ GetInterfaceIP \"eth0\" }}"
 client_addr    = "127.0.0.1 {{ GetInterfaceIP \"eth0\" }}"

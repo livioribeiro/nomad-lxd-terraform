@@ -16,7 +16,7 @@ listener "tcp" {
 }
 
 storage "raft" {
-  path    = "/opt/vault/data"
+  path    = "/opt/vault"
   node_id = "${hostname}"
 
   %{~ for name, addr in vault_servers ~}

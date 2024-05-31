@@ -1,11 +1,11 @@
 variable "version" {
   type    = string
-  default = "23.0"
+  default = "24.0"
 }
 
 variable "postgres_version" {
   type    = string
-  default = "16.1-alpine"
+  default = "16.3-alpine"
 }
 
 variable "volume_name" {

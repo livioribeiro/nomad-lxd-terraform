@@ -1,4 +1,4 @@
-data_dir = "/opt/nomad/data"
+data_dir = "/opt/nomad"
 
 server {
   enabled          = true

@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "1.21-rootless"
+  default = "1.22-rootless"
 }
 
 variable "gitea_host" {
@@ -172,8 +172,11 @@ job "gitea" {
           #!/bin/sh
           set -e
 
+          db_host=$(echo $GITEA__database__HOST | cut -d ':' -f 1)
+          db_port=$(echo $GITEA__database__HOST | cut -d ':' -f 2)
+
           retries=0
-          while ! nc -z localhost 5432
+          while ! nc -z $db_host $db_port
           do
             if [ $retries -gt 10 ]; then
               echo "database unreachable"
@@ -221,6 +224,10 @@ job "gitea" {
     network {
       mode = "bridge"
 
+      port "postgres" {
+        to = 5432
+      }
+
       port "envoy_metrics" {
         to = 9102
       }
@@ -235,7 +242,7 @@ job "gitea" {
     }
 
     service {
-      port = "5432"
+      port = "postgres"
 
       meta {
         envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
@@ -257,7 +264,7 @@ job "gitea" {
       driver = "docker"
 
       config {
-        image = "postgres:16.1-alpine"
+        image = "postgres:16.3-alpine"
       }
 
       env {
@@ -284,13 +291,17 @@ job "gitea" {
     network {
       mode = "bridge"
 
+      port "redis" {
+        to = 6379
+      }
+
       port "envoy_metrics" {
         to = 9102
       }
     }
 
     service {
-      port = "6379"
+      port = "redis"
 
       meta {
         envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"

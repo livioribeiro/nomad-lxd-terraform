@@ -1,4 +1,4 @@
-data_dir = "/opt/nomad/data"
+data_dir = "/opt/nomad"
 
 client {
   enabled           = true
@@ -8,6 +8,10 @@ client {
   host_volume "docker-socket" {
     path      = "/run/docker.sock"
     read_only = true
+  }
+
+  host_volume "nomad-alloc" {
+    path      = "/opt/nomad/alloc"
   }
 }
 
@@ -51,6 +55,7 @@ telemetry {
 plugin "docker" {
   config {
     allow_privileged = true
+
     extra_labels = [
       "job_name",
       "job_id",
@@ -61,42 +66,43 @@ plugin "docker" {
       "node_id"
     ]
 
-    logging {
-      type = "loki"
-      config {
-        labels           = "com.hashicorp.nomad.job_name,com.hashicorp.nomad.job_id,com.hashicorp.nomad.task_group_name,com.hashicorp.nomad.task_name,com.hashicorp.nomad.namespace,com.hashicorp.nomad.node_name,com.hashicorp.nomad.node_id"
-        loki-url         = "http://loki.service.consul:3100/loki/api/v1/push"
-        loki-retries     = 2
-        loki-max-backoff = "800ms"
-        loki-timeout     = "1s"
-        loki-batch-size  = 400
-        keep-file        = true
-        max-size         = "10m"
+  //   logging {
+  //     type = "loki"
 
-        loki-relabel-config = <<-EOT
-          - action: labelmap
-            regex: com_hashicorp_nomad_(\w+)
-          - action: labelmap
-            regex: com_hashicorp_(nomad_job)_name
-          - action: labelmap
-            regex: com_hashicorp_nomad_(task_group)_name
-          - action: labelmap
-            regex: com_hashicorp_nomad_(task)_name
-          - action: labeldrop
-            regex: com_hashicorp_nomad_(\w+)|job_name|job_id|task_group_name|task_group_id|task_name
-        EOT
+  //     config {
+  //       labels           = "com.hashicorp.nomad.job_name,com.hashicorp.nomad.job_id,com.hashicorp.nomad.task_group_name,com.hashicorp.nomad.task_name,com.hashicorp.nomad.namespace,com.hashicorp.nomad.node_name,com.hashicorp.nomad.node_id"
+  //       loki-url         = "http://loki.service.consul:3100/loki/api/v1/push"
+  //       loki-retries     = 2
+  //       loki-max-backoff = "800ms"
+  //       loki-timeout     = "1s"
+  //       loki-batch-size  = 400
+  //       keep-file        = true
+  //       max-size         = "10m"
 
-        loki-pipeline-stages = <<-EOT
-          - decolorize:
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-          - labeldrop:
-              - filename
-              - host
-        EOT
-      }
-    }
+  //       loki-relabel-config = <<-EOT
+  //         - action: labelmap
+  //           regex: com_hashicorp_nomad_(\w+)
+  //         - action: labelmap
+  //           regex: com_hashicorp_(nomad_job)_name
+  //         - action: labelmap
+  //           regex: com_hashicorp_nomad_(task_group)_name
+  //         - action: labelmap
+  //           regex: com_hashicorp_nomad_(task)_name
+  //         - action: labeldrop
+  //           regex: com_hashicorp_nomad_(\w+)|job_name|job_id|task_group_name|task_group_id|task_name
+  //       EOT
+
+  //       loki-pipeline-stages = <<-EOT
+  //         - decolorize:
+  //         - regex:
+  //             expression: '(level|lvl|severity)=(?P<level>\w+)'
+  //         - labels:
+  //             level:
+  //         - labeldrop:
+  //             - filename
+  //             - host
+  //       EOT
+  //     }
+  //   }
   }
 }

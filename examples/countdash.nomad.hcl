@@ -9,7 +9,11 @@ job "countdash" {
       port = "9001"
 
       connect {
-        sidecar_service {}
+        sidecar_service {
+          proxy {
+            transparent_proxy {}
+          }
+        }
 
         sidecar_task {
           resources {
@@ -56,10 +60,7 @@ job "countdash" {
           tags = ["traefik.enable=false"]
 
           proxy {
-            upstreams {
-              destination_name = "count-api"
-              local_bind_port = 8080
-            }
+            transparent_proxy {}
           }
         }
         sidecar_task {
@@ -80,7 +81,7 @@ job "countdash" {
 
       env {
         PORT = "${NOMAD_PORT_http}"
-        COUNTING_SERVICE_URL = "http://${NOMAD_UPSTREAM_ADDR_count_api}"
+        COUNTING_SERVICE_URL = "http://count-api.virtual.consul"
       }
 
       resources {

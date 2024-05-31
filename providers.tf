@@ -1,13 +1,33 @@
 terraform {
   required_providers {
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.4"
+    }
+
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
+
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.5"
+      version = "~> 3.6"
     }
 
     http = {
       source  = "hashicorp/http"
       version = "~> 3.4"
+    }
+
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+
+    cloudinit = {
+      source  = "hashicorp/cloudinit"
+      version = "~> 2.3"
     }
 
     lxd = {
@@ -20,44 +40,24 @@ terraform {
       version = "~> 0.15"
     }
 
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
-
     ansible = {
       source  = "ansible/ansible"
-      version = "~> 1.1"
-    }
-
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.4"
-    }
-
-    null = {
-      source  = "hashicorp/null"
-      version = "~> 3.2"
-    }
-
-    cloudinit = {
-      source  = "hashicorp/cloudinit"
-      version = "~> 2.3"
+      version = "~> 1.2"
     }
 
     consul = {
       source  = "hashicorp/consul"
-      version = "~> 2.20"
+      version = "~> 2.18"
     }
 
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 3.23"
+      version = "~> 3.21"
     }
 
     nomad = {
       source  = "hashicorp/nomad"
-      version = "~> 2.1"
+      version = "~> 2.2"
     }
   }
 }
