@@ -22,7 +22,7 @@ job "gitea" {
   type      = "service"
   namespace = "default"
 
-  group "gitea" {
+  group "app" {
     count = 1
 
     update {
@@ -43,22 +43,12 @@ job "gitea" {
 
     service {
       name = "gitea"
-      port = "3000"
-
-      tags = [
-        "traefik.enable=true",
-        "traefik.consulcatalog.connect=true",
-      ]
-
-      meta {
-        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
-      }
+      port = "http"
+      tags = ["traefik.enable=true"]
 
       check {
         name     = "api-health"
-        expose   = true
         type     = "http"
-        port     = "http"
         path     = "/api/healthz"
         interval = "10s"
         timeout  = "5s"
@@ -66,6 +56,12 @@ job "gitea" {
         check_restart {
           grace = "200s"
         }
+      }
+    }
+
+    service {
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
       }
 
       connect {
@@ -121,16 +117,16 @@ job "gitea" {
         GITEA__security__SECRET_KEY_URI           = "file:/secrets/secret_key"
         GITEA__security__DISABLE_QUERY_AUTH_TOKEN = "true"
         GITEA__database__DB_TYPE                  = "postgres"
-        GITEA__database__HOST                     = "localhost:5432"
+        GITEA__database__HOST                     = "127.0.0.1:5432"
         GITEA__database__NAME                     = "gitea"
         GITEA__database__USER                     = "gitea"
         GITEA__database__PASSWD                   = "gitea"
         GITEA__cache__ADAPTER                     = "redis"
-        GITEA__cache__HOST                        = "redis://localhost:6379/0"
+        GITEA__cache__HOST                        = "redis://127.0.0.1:6379/0"
         GITEA__queue__TYPE                        = "redis"
-        GITEA__queue__CONN_STR                    = "redis://localhost:6379/1"
+        GITEA__queue__CONN_STR                    = "redis://127.0.0.1:6379/1"
         GITEA__session__PROVIDER                  = "redis"
-        GITEA__session__PROVIDER_CONFIG           = "redis://localhost:6379/2"
+        GITEA__session__PROVIDER_CONFIG           = "redis://127.0.0.1:6379/2"
         GITEA__log__LEVEL                         = "Warn"
         GITEA__actions__ENABLED                   = "true"
         GITEA__metrics__ENABLED                   = "true"
@@ -140,7 +136,7 @@ job "gitea" {
         destination = "/secrets/internal_token"
 
         data = <<-EOT
-          {{ with nomadVar "nomad/jobs/gitea/gitea/gitea" }}{{ .internal_token }}{{ end }}
+          {{ with nomadVar "nomad/jobs/gitea/app/gitea" }}{{ .internal_token }}{{ end }}
         EOT
       }
 
@@ -148,7 +144,7 @@ job "gitea" {
         destination = "/secrets/secret_key"
 
         data = <<-EOT
-          {{ with nomadVar "nomad/jobs/gitea/gitea/gitea" }}{{ .secret_key }}{{ end }}
+          {{ with nomadVar "nomad/jobs/gitea/app/gitea" }}{{ .secret_key }}{{ end }}
         EOT
       }
 
@@ -156,7 +152,7 @@ job "gitea" {
         destination = "/secrets/root_user"
 
         data = <<-EOT
-          {{ with nomadVar "nomad/jobs/gitea/gitea/gitea" }}
+          {{ with nomadVar "nomad/jobs/gitea/app/gitea" }}
           ROOT_USERNAME='{{ .root_username }}'
           ROOT_PASSWORD='{{ .root_password }}'
           ROOT_EMAIL='{{ .root_email }}'
@@ -224,10 +220,6 @@ job "gitea" {
     network {
       mode = "bridge"
 
-      port "postgres" {
-        to = 5432
-      }
-
       port "envoy_metrics" {
         to = 9102
       }
@@ -242,7 +234,7 @@ job "gitea" {
     }
 
     service {
-      port = "postgres"
+      port = "5432"
 
       meta {
         envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
@@ -291,17 +283,13 @@ job "gitea" {
     network {
       mode = "bridge"
 
-      port "redis" {
-        to = 6379
-      }
-
       port "envoy_metrics" {
         to = 9102
       }
     }
 
     service {
-      port = "redis"
+      port = "6379"
 
       meta {
         envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"

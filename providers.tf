@@ -2,7 +2,7 @@ terraform {
   required_providers {
     local = {
       source  = "hashicorp/local"
-      version = "~> 2.4"
+      version = "~> 2.5"
     }
 
     null = {
@@ -32,7 +32,7 @@ terraform {
 
     lxd = {
       source  = "terraform-lxd/lxd"
-      version = "~> 2.0"
+      version = "~> 2.1"
     }
 
     packer = {
@@ -42,22 +42,22 @@ terraform {
 
     ansible = {
       source  = "ansible/ansible"
-      version = "~> 1.2"
+      version = "~> 1.3"
     }
 
     consul = {
       source  = "hashicorp/consul"
-      version = "~> 2.18"
+      version = "~> 2.20"
     }
 
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 3.21"
+      version = "~> 3.25"
     }
 
     nomad = {
       source  = "hashicorp/nomad"
-      version = "~> 2.2"
+      version = "~> 2.3"
     }
   }
 }

@@ -1,8 +1,10 @@
-data_dir       = "/opt/consul"
-server         = true
-advertise_addr = "{{ GetInterfaceIP \"eth0\" }}"
-client_addr    = "127.0.0.1 {{ GetInterfaceIP \"eth0\" }}"
+data_dir           = "/opt/consul"
+server             = true
+bind_addr          = "{{ GetInterfaceIP \"eth0\" }}"
+client_addr        = "127.0.0.1 {{ GetInterfaceIP \"eth0\" }}"
 primary_datacenter = "dc1"
+
+recursors = ["9.9.9.9", "149.112.112.112"]
 
 bootstrap_expect = 3
 retry_join = [

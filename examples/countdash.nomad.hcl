@@ -9,11 +9,7 @@ job "countdash" {
       port = "9001"
 
       connect {
-        sidecar_service {
-          proxy {
-            transparent_proxy {}
-          }
-        }
+        sidecar_service {}
 
         sidecar_task {
           resources {
@@ -31,10 +27,6 @@ job "countdash" {
         image = "hashicorpnomad/counter-api:v3"
       }
 
-      env {
-        PORT = "9001"
-      }
-
       resources {
         cpu    = 50
         memory = 10
@@ -45,22 +37,24 @@ job "countdash" {
   group "dashboard" {
     network {
       mode = "bridge"
-
-      port "http" {}
     }
 
     service {
       name = "count-dashboard"
-      port = "http"
+      port = "9002"
 
-      tags = ["traefik.enable=true"]
+      tags = [
+        "traefik.enable=true",
+        "traefik.consulcatalog.connect=true",
+      ]
 
       connect {
         sidecar_service {
-          tags = ["traefik.enable=false"]
-
           proxy {
-            transparent_proxy {}
+            upstreams {
+              service         = "count-api"
+              local_bind_port = 9001
+            }
           }
         }
         sidecar_task {
@@ -80,8 +74,7 @@ job "countdash" {
       }
 
       env {
-        PORT = "${NOMAD_PORT_http}"
-        COUNTING_SERVICE_URL = "http://count-api.virtual.consul"
+        COUNTING_SERVICE_URL = "http://localhost:9001"
       }
 
       resources {

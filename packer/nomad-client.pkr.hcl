@@ -9,12 +9,12 @@ packer {
 
 variable "ubuntu_version" {
   type    = string
-  default = "jammy"
+  default = "noble"
 }
 
 variable "cni_plugins_version" {
   type    = string
-  default = "1.4.0"
+  default = "1.5.0"
 }
 
 variable "consul_cni_version" {
@@ -24,7 +24,7 @@ variable "consul_cni_version" {
 
 variable "loki_log_driver_version" {
   type    = string
-  default = "2.9.3"
+  default = "3.0.0"
 }
 
 source "lxd" "nomad-client" {

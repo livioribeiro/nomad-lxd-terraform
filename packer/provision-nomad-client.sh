@@ -32,7 +32,7 @@ cat <<EOF > /etc/systemd/resolved.conf.d/consul.conf
 [Resolve]
 DNS=127.0.0.1:8600
 DNSSEC=false
-Domains=~service.consul,~node.consul
+Domains=~consul
 EOF
 
 systemctl restart systemd-resolved
@@ -46,7 +46,7 @@ tar -vxf /tmp/cni-plugins.tgz -C /opt/cni/bin
 wget -q -O /tmp/consul-cni.zip $CONSUL_CNI_URL
 unzip /tmp/consul-cni.zip consul-cni -d /opt/cni/bin
 
-chown root.root /opt/cni/bin
+chown -R root.root /opt/cni/bin
 chmod 755 /opt/cni/bin/*
 rm /tmp/cni-plugins.tgz
 

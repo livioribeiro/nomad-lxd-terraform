@@ -45,7 +45,7 @@ resource "nomad_csi_volume" "gitea_database_data" {
 }
 
 resource "nomad_variable" "gitea" {
-  path      = "nomad/jobs/gitea/gitea/gitea"
+  path      = "nomad/jobs/gitea/app/gitea"
   namespace = data.nomad_namespace.default.name
 
   items = {
@@ -82,7 +82,7 @@ resource "consul_config_entry" "gitea_database_intention" {
   config_json = jsonencode({
     Sources = [
       {
-        Name   = "gitea"
+        Name   = "gitea-app"
         Action = "allow"
       }
     ]
@@ -96,7 +96,7 @@ resource "consul_config_entry" "gitea_cache_intention" {
   config_json = jsonencode({
     Sources = [
       {
-        Name   = "gitea"
+        Name   = "gitea-app"
         Action = "allow"
       }
     ]
