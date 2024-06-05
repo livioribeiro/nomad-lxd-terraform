@@ -39,8 +39,7 @@ module "nomad_vault_setup" {
     null_resource.ansible_nomad_server,
   ]
 
-  source  = "hashicorp-modules/nomad-setup/vault"
-  version = "1.1.0"
+  source = "./modules/nomad_setup_vault"
 
   nomad_jwks_url = "http://nomad.${var.external_domain}/.well-known/jwks.json"
   policy_names   = [vault_policy.nomad_workloads.name]

@@ -99,7 +99,7 @@ job "traefik" {
           providers:
             consulCatalog:
               endpoint:
-                address: '[[ env "attr.unique.network.ip-address" ]]:8500'
+                address: '127.0.0.1:8500'
                 token: "[[ env "CONSUL_TOKEN" ]]"
               serviceName: traefik-ingress
               connectAware: true

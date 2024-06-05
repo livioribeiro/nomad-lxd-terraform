@@ -1,7 +1,7 @@
 data_dir    = "/opt/consul"
 server      = false
 bind_addr   = "{{ GetInterfaceIP \"${network_interface}\" }}"
-client_addr = "127.0.0.1 {{ GetInterfaceIP \"eth0\" }}"
+client_addr = "127.0.0.1 {{ GetInterfaceIP \"${network_interface}\" }} {{ GetInterfaceIP \"docker0\" }}"
 
 recursors = ["9.9.9.9", "149.112.112.112"]
 

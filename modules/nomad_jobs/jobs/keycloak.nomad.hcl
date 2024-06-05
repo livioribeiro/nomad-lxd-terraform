@@ -48,7 +48,6 @@ job "keycloak" {
       check {
         name     = "Healthiness Check"
         type     = "http"
-        port     = "http"
         path     = "/health/live"
         interval = "10s"
         timeout  = "3s"
