@@ -8,7 +8,7 @@ job "grafana" {
   node_pool = "infra"
   namespace = "system"
 
-  group "grafana" {
+  group "app" {
     count = 1
 
     network {
@@ -28,39 +28,9 @@ job "grafana" {
       port = "http"
       tags = ["traefik.enable=true"]
 
-      meta {
-        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
-      }
-
-      connect {
-        sidecar_service {
-          tags = ["traefik.enable=false"]
-
-          proxy {
-            upstreams {
-              destination_name = "loki"
-              local_bind_port  = 3100
-            }
-
-            upstreams {
-              destination_name = "prometheus"
-              local_bind_port  = 9090
-            }
-          }
-        }
-
-        sidecar_task {
-          resources {
-            cpu    = 50
-            memory = 32
-          }
-        }
-      }
-
       check {
         name     = "Healthiness Check"
         type     = "http"
-        port     = "http"
         path     = "/robots.txt"
         interval = "10s"
         timeout  = "5s"
@@ -74,7 +44,6 @@ job "grafana" {
       check {
         name      = "Readiness Check"
         type      = "http"
-        port      = "http"
         path      = "/robots.txt"
         interval  = "10s"
         timeout   = "5s"
@@ -83,6 +52,35 @@ job "grafana" {
         check_restart {
           grace           = "5s"
           ignore_warnings = true
+        }
+      }
+    }
+
+    service {
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
+
+      connect {
+        sidecar_service {
+          proxy {
+            upstreams {
+              destination_name = "loki-app"
+              local_bind_port  = 3100
+            }
+
+            upstreams {
+              destination_name = "prometheus-app"
+              local_bind_port  = 9090
+            }
+          }
+        }
+
+        sidecar_task {
+          resources {
+            cpu    = 50
+            memory = 32
+          }
         }
       }
     }

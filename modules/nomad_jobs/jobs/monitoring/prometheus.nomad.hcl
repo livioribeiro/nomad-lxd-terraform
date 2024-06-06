@@ -8,7 +8,7 @@ job "prometheus" {
   node_pool = "infra"
   namespace = "system"
 
-  group "prometheus" {
+  group "app" {
     count = 1
 
     restart {
@@ -22,7 +22,7 @@ job "prometheus" {
       mode = "bridge"
 
       port "prometheus" {
-        static = 9090
+        to = 9090
       }
 
       port "envoy_metrics" {
@@ -32,17 +32,35 @@ job "prometheus" {
 
     service {
       name = "prometheus"
-      port = "${NOMAD_HOST_PORT_prometheus}"
+      port = "prometheus"
       tags = ["traefik.enable=true"]
+
+      check {
+        type     = "http"
+        port     = "prometheus"
+        path     = "/-/healthy"
+        interval = "10s"
+        timeout  = "2s"
+      }
+    }
+
+    service {
+      port = "9090"
+
+      check {
+        type     = "http"
+        port     = "prometheus"
+        path     = "/-/healthy"
+        interval = "10s"
+        timeout  = "2s"
+      }
 
       meta {
         envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
       }
 
       connect {
-        sidecar_service {
-          tags = ["traefik.enable=false"]
-        }
+        sidecar_service {}
 
         sidecar_task {
           resources {
@@ -50,15 +68,6 @@ job "prometheus" {
             memory = 32
           }
         }
-      }
-
-      check {
-        name     = "prometheus port alive"
-        type     = "http"
-        port     = "prometheus"
-        path     = "/-/healthy"
-        interval = "10s"
-        timeout  = "2s"
       }
     }
 

@@ -53,12 +53,12 @@ resource "nomad_job" "grafana" {
 
 resource "consul_config_entry" "prometheus_intention" {
   kind = "service-intentions"
-  name = "prometheus"
+  name = "prometheus-app"
 
   config_json = jsonencode({
     Sources = [
       {
-        Name   = "grafana"
+        Name   = "grafana-app"
         Action = "allow"
       },
       {
@@ -71,12 +71,12 @@ resource "consul_config_entry" "prometheus_intention" {
 
 resource "consul_config_entry" "loki_intention" {
   kind = "service-intentions"
-  name = "loki"
+  name = "loki-app"
 
   config_json = jsonencode({
     Sources = [
       {
-        Name   = "grafana"
+        Name   = "grafana-app"
         Action = "allow"
       },
     ]

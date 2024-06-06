@@ -25,15 +25,6 @@ job "traefik" {
     }
 
     service {
-      name = "traefik-ingress"
-      port = "ingress"
-
-      connect {
-        native = true
-      }
-    }
-
-    service {
       name = "traefik-dashboard"
       port = "dashboard"
 
@@ -101,8 +92,6 @@ job "traefik" {
               endpoint:
                 address: '127.0.0.1:8500'
                 token: "[[ env "CONSUL_TOKEN" ]]"
-              serviceName: traefik-ingress
-              connectAware: true
               exposedByDefault: false
               defaultRule: "Host(`{{ normalize .Name }}.${var.proxy_suffix}`)"
         EOF

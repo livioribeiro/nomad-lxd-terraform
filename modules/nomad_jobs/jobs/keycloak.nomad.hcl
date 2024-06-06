@@ -29,7 +29,7 @@ job "keycloak" {
   type      = "service"
   namespace = "default"
 
-  group "keycloak" {
+  group "app" {
     count = 1
 
     network {
@@ -37,6 +37,10 @@ job "keycloak" {
 
       port "http" {
         to = 8080
+      }
+
+      port "envoy_metrics" {
+        to = 9102
       }
     }
 
@@ -60,7 +64,6 @@ job "keycloak" {
       check {
         name      = "Readiness Check"
         type      = "http"
-        port      = "http"
         path      = "/health/ready"
         interval  = "10s"
         timeout   = "3s"
@@ -71,11 +74,15 @@ job "keycloak" {
           ignore_warnings = true
         }
       }
+    }
+
+    service {
+      meta {
+        envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
+      }
 
       connect {
         sidecar_service {
-          tags = ["traefik.enable=false"]
-
           proxy {
             upstreams {
               destination_name = "keycloak-database"

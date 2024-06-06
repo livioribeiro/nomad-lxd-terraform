@@ -8,15 +8,11 @@ job "loki" {
   node_pool = "infra"
   namespace = "system"
 
-  group "loki" {
+  group "app" {
     count = 1
 
     network {
       mode = "bridge"
-
-      port "loki" {
-        to = 3100
-      }
 
       port "envoy_metrics" {
         to = 9102
@@ -24,8 +20,20 @@ job "loki" {
     }
 
     service {
-      name = "loki"
-      port = "${NOMAD_HOST_PORT_loki}"
+      port = "3100"
+
+      check {
+        type     = "http"
+        path     = "/ready"
+        expose   = true
+        interval = "10s"
+        timeout  = "5s"
+
+        check_restart {
+          grace = "10s"
+          limit = 5
+        }
+      }
 
       meta {
         envoy_metrics_port = "${NOMAD_HOST_PORT_envoy_metrics}"
@@ -41,19 +49,6 @@ job "loki" {
           }
         }
       }
-
-      check {
-        type     = "http"
-        port     = "loki"
-        path     = "/ready"
-        interval = "10s"
-        timeout  = "5s"
-
-        check_restart {
-          grace = "10s"
-          limit = 5
-        }
-      }
     }
 
     task "loki" {
@@ -62,7 +57,6 @@ job "loki" {
       config {
         image = "grafana/loki:${var.version}"
         args  = ["-config.file=/local/loki.yaml"]
-        ports = ["loki"]
       }
 
       resources {
@@ -79,7 +73,7 @@ job "loki" {
           auth_enabled: false
 
           server:
-            http_listen_port: {{ env "NOMAD_PORT_loki" }}
+            http_listen_port: 3100
 
           common:
             ring:
