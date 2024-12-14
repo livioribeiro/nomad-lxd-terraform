@@ -13,9 +13,7 @@ resource "lxd_network" "nomad" {
 resource "lxd_storage_pool" "nomad_cluster" {
   name   = "nomad-cluster"
   driver = "dir"
-  config = {
-    source = "/var/snap/lxd/common/lxd/storage-pools/nomad-cluster"
-  }
+  source = "/var/snap/lxd/common/lxd/storage-pools/nomad-cluster"
 }
 
 resource "lxd_profile" "nomad_cluster" {

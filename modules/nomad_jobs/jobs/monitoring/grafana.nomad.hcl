@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "11.0.0"
+  default = "11.4.0"
 }
 
 job "grafana" {

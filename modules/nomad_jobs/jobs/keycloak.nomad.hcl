@@ -1,11 +1,11 @@
 variable "version" {
   type    = string
-  default = "24.0"
+  default = "26.0"
 }
 
 variable "postgres_version" {
   type    = string
-  default = "16.3-alpine"
+  default = "17.2-alpine"
 }
 
 variable "volume_name" {
@@ -39,6 +39,10 @@ job "keycloak" {
         to = 8080
       }
 
+      port "management" {
+        to = 9000
+      }
+
       port "envoy_metrics" {
         to = 9102
       }
@@ -52,6 +56,7 @@ job "keycloak" {
       check {
         name     = "Healthiness Check"
         type     = "http"
+        port     = "management"
         path     = "/health/live"
         interval = "10s"
         timeout  = "3s"
@@ -64,6 +69,7 @@ job "keycloak" {
       check {
         name      = "Readiness Check"
         type      = "http"
+        port      = "management"
         path      = "/health/ready"
         interval  = "10s"
         timeout   = "3s"
@@ -119,8 +125,6 @@ job "keycloak" {
       env {
         KC_HEALTH_ENABLED        = "true"
         KC_HTTP_ENABLED          = "true"
-        KC_PROXY                 = "edge"
-        KC_HOSTNAME_STRICT_HTTPS = "true"
         KC_LOG_LEVEL             = "WARN,io.quarkus:INFO,org.infinispan.CONTAINER:INFO"
         KC_HOSTNAME              = "keycloak.${var.apps_subdomain}.${var.external_domain}"
         KC_DB                    = "postgres"

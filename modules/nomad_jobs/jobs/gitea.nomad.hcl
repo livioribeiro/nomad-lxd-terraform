@@ -256,7 +256,7 @@ job "gitea" {
       driver = "docker"
 
       config {
-        image = "postgres:16.3-alpine"
+        image = "postgres:17.2-alpine"
       }
 
       env {
@@ -311,7 +311,7 @@ job "gitea" {
       driver = "docker"
 
       config {
-        image = "redis:7.2-alpine"
+        image = "redis:7.4-alpine"
       }
 
       resources {

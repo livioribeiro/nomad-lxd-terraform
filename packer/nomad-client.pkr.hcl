@@ -49,8 +49,8 @@ build {
       APT_HASHICORP       = "https://apt.releases.hashicorp.com"
       GPG_DOCKER          = "https://download.docker.com/linux/ubuntu/gpg"
       APT_DOCKER          = "https://download.docker.com/linux/ubuntu"
-      GPG_GETENVOY        = "https://deb.dl.getenvoy.io/public/gpg.8115BA8E629CC074.key"
-      APT_GETENVOY        = "https://deb.dl.getenvoy.io/public/deb/ubuntu"
+      GPG_ENVOY        = "https://apt.envoyproxy.io/signing.key"
+      APT_ENVOY        = "https://apt.envoyproxy.io"
       CNI_PLUGINS_URL     = "https://github.com/containernetworking/plugins/releases/download/v${var.cni_plugins_version}/cni-plugins-linux-amd64-v${var.cni_plugins_version}.tgz"
       CONSUL_CNI_URL      = "https://releases.hashicorp.com/consul-cni/${var.consul_cni_version}/consul-cni_${var.consul_cni_version}_linux_amd64.zip"
       LOKI_DRIVER_VERSION = var.loki_log_driver_version

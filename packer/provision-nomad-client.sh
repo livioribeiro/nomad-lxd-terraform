@@ -9,8 +9,8 @@ SOURCE_HASHICORP="deb [arch=$(dpkg --print-architecture) signed-by=$GPG_HASHICOR
 GPG_DOCKER_KEYRING=/usr/share/keyrings/docker.gpg
 SOURCE_DOCKER="deb [arch=$(dpkg --print-architecture) signed-by=$GPG_DOCKER_KEYRING] $APT_DOCKER $(lsb_release -cs) stable"
 
-GPG_GETENVOY_KEYRING=/usr/share/keyrings/getenvoy-keyring.gpg
-SOURCE_GETENVOY="deb [arch=$(dpkg --print-architecture) signed-by=$GPG_GETENVOY_KEYRING] $APT_GETENVOY $(lsb_release -cs) main"
+GPG_ENVOY_KEYRING=/usr/share/keyrings/envoy-keyring.gpg
+SOURCE_ENVOY="deb [arch=$(dpkg --print-architecture) signed-by=$GPG_ENVOY_KEYRING] $APT_ENVOY jammy main"
 
 apt-get -q update
 apt-get -q -y install wget unzip
@@ -21,11 +21,11 @@ echo $SOURCE_HASHICORP > /etc/apt/sources.list.d/hashicorp.list
 wget -q -O- $GPG_DOCKER | gpg --dearmor -o $GPG_DOCKER_KEYRING
 echo $SOURCE_DOCKER > /etc/apt/sources.list.d/docker.list
 
-wget -q -O- $GPG_GETENVOY | gpg --dearmor -o $GPG_GETENVOY_KEYRING
-echo $SOURCE_GETENVOY > /etc/apt/sources.list.d/getenvoy.list
+wget -q -O- $GPG_ENVOY | gpg --dearmor -o $GPG_ENVOY_KEYRING
+echo $SOURCE_ENVOY > /etc/apt/sources.list.d/envoy.list
 
 apt-get -q update
-apt-get -q -y install consul nomad docker-ce containerd.io getenvoy-envoy nfs-common
+apt-get -q -y install consul nomad docker-ce containerd.io envoy nfs-common
 
 mkdir -p /etc/systemd/resolved.conf.d
 cat <<EOF > /etc/systemd/resolved.conf.d/consul.conf

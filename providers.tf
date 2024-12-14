@@ -32,12 +32,12 @@ terraform {
 
     lxd = {
       source  = "terraform-lxd/lxd"
-      version = "~> 2.1"
+      version = "~> 2.4"
     }
 
     packer = {
       source  = "toowoxx/packer"
-      version = "~> 0.15"
+      version = "~> 0.16"
     }
 
     ansible = {
@@ -47,17 +47,17 @@ terraform {
 
     consul = {
       source  = "hashicorp/consul"
-      version = "~> 2.20"
+      version = "~> 2.21"
     }
 
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 4.2"
+      version = "~> 4.5"
     }
 
     nomad = {
       source  = "hashicorp/nomad"
-      version = "~> 2.3"
+      version = "~> 2.4"
     }
   }
 }
