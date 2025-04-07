@@ -28,23 +28,23 @@ data "cloudinit_config" "nfs_server" {
   }
 }
 
-resource "lxd_volume" "nfs_server_data" {
+resource "incus_storage_volume" "nfs_server_data" {
   name         = "nfs-server-data"
-  pool         = lxd_storage_pool.nomad_cluster.name
+  pool         = incus_storage_pool.nomad_cluster.name
   content_type = "filesystem"
 }
 
-resource "lxd_instance" "nfs_server" {
+resource "incus_instance" "nfs_server" {
   name     = local.nfs_server["name"]
-  image    = "ubuntu:${var.ubuntu_version}"
-  profiles = [lxd_profile.nomad_cluster.name]
+  image    = "images:ubntu/${var.ubuntu_version}"
+  profiles = [incus_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network        = lxd_network.nomad.name
+      network        = incus_network.nomad.name
       "ipv4.address" = local.nfs_server["host"]
     }
   }
@@ -54,8 +54,8 @@ resource "lxd_instance" "nfs_server" {
     type = "disk"
     properties = {
       path   = "/srv/nomad"
-      source = lxd_volume.nfs_server_data.name
-      pool   = lxd_volume.nfs_server_data.pool
+      source = incus_storage_volume.nfs_server_data.name
+      pool   = incus_storage_volume.nfs_server_data.pool
     }
   }
 

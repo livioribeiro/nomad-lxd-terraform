@@ -42,27 +42,27 @@ data "cloudinit_config" "consul_server" {
   }
 }
 
-resource "lxd_volume" "consul_server_data" {
+resource "incus_storage_volume" "consul_server_data" {
   for_each = toset(keys(local.consul_servers))
 
   name         = "${each.key}-data"
-  pool         = lxd_storage_pool.nomad_cluster.name
+  pool         = incus_storage_pool.nomad_cluster.name
   content_type = "filesystem"
 }
 
-resource "lxd_instance" "consul_server" {
+resource "incus_instance" "consul_server" {
   for_each = local.consul_servers
 
   name     = each.key
-  image    = "ubuntu:${var.ubuntu_version}"
-  profiles = [lxd_profile.nomad_cluster.name]
+  image    = "images:ubntu/${var.ubuntu_version}"
+  profiles = [incus_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network        = lxd_network.nomad.name
+      network        = incus_network.nomad.name
       "ipv4.address" = each.value
     }
   }
@@ -72,8 +72,8 @@ resource "lxd_instance" "consul_server" {
     type = "disk"
     properties = {
       path   = "/opt/consul/data"
-      source = lxd_volume.consul_server_data[each.key].name
-      pool   = lxd_volume.consul_server_data[each.key].pool
+      source = incus_storage_volume.consul_server_data[each.key].name
+      pool   = incus_storage_volume.consul_server_data[each.key].pool
     }
   }
 
@@ -93,7 +93,7 @@ resource "lxd_instance" "consul_server" {
 
 resource "null_resource" "ansible_consul" {
   depends_on = [
-    lxd_instance.consul_server,
+    incus_instance.consul_server,
     null_resource.setup_ansible,
     ansible_group.consul_servers,
     ansible_host.consul_server,
@@ -127,7 +127,7 @@ data "consul_acl_token_secret_id" "consul_server" {
 }
 
 resource "null_resource" "consul_server_agent_token" {
-  for_each = lxd_instance.consul_server
+  for_each = incus_instance.consul_server
 
   provisioner "remote-exec" {
     connection {

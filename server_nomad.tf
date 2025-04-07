@@ -79,7 +79,7 @@ data "cloudinit_config" "nomad_server" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
+              consul_servers    = values(incus_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.nomad_server_agent[each.key].secret_id
               network_interface = "eth0"
@@ -111,27 +111,27 @@ data "cloudinit_config" "nomad_server" {
   }
 }
 
-resource "lxd_volume" "nomad_server_data" {
+resource "incus_storage_volume" "nomad_server_data" {
   for_each = toset(keys(local.nomad_servers))
 
   name         = "${each.key}-data"
-  pool         = lxd_storage_pool.nomad_cluster.name
+  pool         = incus_storage_pool.nomad_cluster.name
   content_type = "filesystem"
 }
 
-resource "lxd_instance" "nomad_server" {
+resource "incus_instance" "nomad_server" {
   for_each = local.nomad_servers
 
   name     = each.key
-  image    = "ubuntu:${var.ubuntu_version}"
-  profiles = [lxd_profile.nomad_cluster.name]
+  image    = "images:ubntu/${var.ubuntu_version}"
+  profiles = [incus_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network        = lxd_network.nomad.name
+      network        = incus_network.nomad.name
       "ipv4.address" = each.value
     }
   }
@@ -141,8 +141,8 @@ resource "lxd_instance" "nomad_server" {
     type = "disk"
     properties = {
       path   = "/opt/nomad/data"
-      source = lxd_volume.nomad_server_data[each.key].name
-      pool   = lxd_volume.nomad_server_data[each.key].pool
+      source = incus_storage_volume.nomad_server_data[each.key].name
+      pool   = incus_storage_volume.nomad_server_data[each.key].pool
     }
   }
 
@@ -162,7 +162,7 @@ resource "lxd_instance" "nomad_server" {
 
 resource "null_resource" "ansible_nomad_server" {
   depends_on = [
-    lxd_instance.nomad_server,
+    incus_instance.nomad_server,
     null_resource.setup_ansible,
     ansible_group.nomad_servers,
     ansible_host.nomad_server,

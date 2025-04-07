@@ -17,7 +17,7 @@ resource "packer_image" "nomad_client" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "lxc image delete ${self.name}"
+    command = "incus image delete ${self.name}"
   }
 }
 
@@ -105,7 +105,7 @@ data "cloudinit_config" "nomad_client" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
+              consul_servers    = values(incus_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.nomad_client_agent[each.key].secret_id
               network_interface = "enp5s0"
@@ -130,26 +130,21 @@ data "cloudinit_config" "nomad_client" {
   }
 }
 
-resource "lxd_instance" "nomad_client" {
+resource "incus_instance" "nomad_client" {
   for_each   = local.nomad_clients
-  depends_on = [lxd_instance.nomad_server]
+  depends_on = [incus_instance.nomad_server]
 
   name     = each.key
   image    = packer_image.nomad_client.name
   type     = "virtual-machine"
-  profiles = [lxd_profile.nomad_cluster.name]
-
-  limits = {
-    cpu    = 2
-    memory = startswith(each.key, "nomad-infra-client-") ? "3GB" : "2GB"
-  }
+  profiles = [incus_profile.nomad_cluster.name]
 
   device {
     name = "enp5s0"
     type = "nic"
 
     properties = {
-      network        = lxd_network.nomad.name
+      network        = incus_network.nomad.name
       "ipv4.address" = each.value
     }
   }
@@ -157,6 +152,8 @@ resource "lxd_instance" "nomad_client" {
   config = {
     "cloud-init.user-data"  = data.cloudinit_config.nomad_client[each.key].rendered
     "user.access_interface" = "enp5s0"
+    "limits.cpu" = 2
+    "limits.memory" = startswith(each.key, "nomad-infra-client-") ? "3GB" : "2GB"
   }
 
   provisioner "remote-exec" {

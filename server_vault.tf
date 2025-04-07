@@ -63,7 +63,7 @@ data "cloudinit_config" "vault_server" {
         {
           path = "/etc/consul.d/consul.hcl", content = templatefile(
             "config/consul-client.hcl", {
-              consul_servers    = values(lxd_instance.consul_server)[*].ipv4_address
+              consul_servers    = values(incus_instance.consul_server)[*].ipv4_address
               encrypt_key       = random_id.consul_encrypt_key.b64_std
               agent_token       = data.consul_acl_token_secret_id.vault_server_agent[each.key].secret_id
               network_interface = "eth0"
@@ -90,27 +90,27 @@ data "cloudinit_config" "vault_server" {
   }
 }
 
-resource "lxd_volume" "vault_server_data" {
+resource "incus_storage_volume" "vault_server_data" {
   for_each = toset(keys(local.vault_servers))
 
   name         = "${each.key}-data"
-  pool         = lxd_storage_pool.nomad_cluster.name
+  pool         = incus_storage_pool.nomad_cluster.name
   content_type = "filesystem"
 }
 
-resource "lxd_instance" "vault_server" {
+resource "incus_instance" "vault_server" {
   for_each = local.vault_servers
 
   name     = each.key
-  image    = "ubuntu:${var.ubuntu_version}"
-  profiles = [lxd_profile.nomad_cluster.name]
+  image    = "images:ubntu/${var.ubuntu_version}"
+  profiles = [incus_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network        = lxd_network.nomad.name
+      network        = incus_network.nomad.name
       "ipv4.address" = each.value
     }
   }
@@ -120,8 +120,8 @@ resource "lxd_instance" "vault_server" {
     type = "disk"
     properties = {
       path   = "/opt/vault/data"
-      source = lxd_volume.vault_server_data[each.key].name
-      pool   = lxd_volume.vault_server_data[each.key].pool
+      source = incus_storage_volume.vault_server_data[each.key].name
+      pool   = incus_storage_volume.vault_server_data[each.key].pool
     }
   }
 
@@ -141,7 +141,7 @@ resource "lxd_instance" "vault_server" {
 
 resource "null_resource" "ansible_vault" {
   depends_on = [
-    lxd_instance.vault_server,
+    incus_instance.vault_server,
     null_resource.setup_ansible,
     ansible_group.vault_servers,
     ansible_host.vault_server,

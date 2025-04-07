@@ -28,17 +28,17 @@ data "cloudinit_config" "load_balancer" {
   }
 }
 
-resource "lxd_instance" "load_balancer" {
+resource "incus_instance" "load_balancer" {
   name     = local.load_balancer["name"]
-  image    = "ubuntu:${var.ubuntu_version}"
-  profiles = [lxd_profile.nomad_cluster.name]
+  image    = "images:ubntu/${var.ubuntu_version}"
+  profiles = [incus_profile.nomad_cluster.name]
 
   device {
     name = "eth0"
     type = "nic"
 
     properties = {
-      network        = lxd_network.nomad.name
+      network        = incus_network.nomad.name
       "ipv4.address" = local.load_balancer["host"]
     }
   }

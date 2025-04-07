@@ -1,5 +1,5 @@
-resource "lxd_network" "nomad" {
-  name = "nomadlxdbr0"
+resource "incus_network" "nomad" {
+  name = "nomadincusbr0"
 
   config = {
     "ipv4.address"     = "${cidrhost(var.base_network, 1)}/16"
@@ -10,13 +10,15 @@ resource "lxd_network" "nomad" {
   }
 }
 
-resource "lxd_storage_pool" "nomad_cluster" {
+resource "incus_storage_pool" "nomad_cluster" {
   name   = "nomad-cluster"
   driver = "dir"
-  source = "/var/snap/lxd/common/lxd/storage-pools/nomad-cluster"
+  config = {
+    source = "/var/lib/incus/storage-pools/nomad-cluster"
+  }
 }
 
-resource "lxd_profile" "nomad_cluster" {
+resource "incus_profile" "nomad_cluster" {
   name = "nomad"
 
   device {
@@ -24,7 +26,7 @@ resource "lxd_profile" "nomad_cluster" {
     type = "disk"
     properties = {
       path = "/"
-      pool = lxd_storage_pool.nomad_cluster.name
+      pool = incus_storage_pool.nomad_cluster.name
     }
   }
 }

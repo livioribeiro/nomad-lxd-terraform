@@ -30,9 +30,9 @@ terraform {
       version = "~> 2.3"
     }
 
-    lxd = {
-      source  = "terraform-lxd/lxd"
-      version = "~> 2.4"
+    incus = {
+      source  = "lxc/incus"
+      version = "~> 0.3"
     }
 
     packer = {
@@ -62,13 +62,13 @@ terraform {
   }
 }
 
-provider "lxd" {
+provider "incus" {
   generate_client_certificates = true
   accept_remote_certificate    = true
 }
 
 provider "consul" {
-  address  = "https://${lxd_instance.consul_server["consul-server-1"].ipv4_address}:8501"
+  address  = "https://${incus_instance.consul_server["consul-server-1"].ipv4_address}:8501"
   token    = data.local_sensitive_file.consul_root_token.content
   ca_pem   = tls_self_signed_cert.nomad_cluster.cert_pem
   cert_pem = tls_locally_signed_cert.consul.cert_pem
@@ -76,14 +76,14 @@ provider "consul" {
 }
 
 provider "vault" {
-  address          = "https://${lxd_instance.vault_server["vault-server-1"].ipv4_address}:8200"
+  address          = "https://${incus_instance.vault_server["vault-server-1"].ipv4_address}:8200"
   token            = data.local_sensitive_file.vault_root_token.content
   ca_cert_file     = local_file.cluster_ca_cert.filename
   skip_child_token = true
 }
 
 provider "nomad" {
-  address   = "https://${lxd_instance.nomad_server["nomad-server-1"].ipv4_address}:4646"
+  address   = "https://${incus_instance.nomad_server["nomad-server-1"].ipv4_address}:4646"
   secret_id = data.local_sensitive_file.nomad_root_token.content
   ca_pem    = tls_self_signed_cert.nomad_cluster.cert_pem
   cert_pem  = tls_locally_signed_cert.consul.cert_pem

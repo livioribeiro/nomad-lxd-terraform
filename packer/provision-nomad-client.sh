@@ -53,7 +53,7 @@ rm /tmp/cni-plugins.tgz
 usermod -aG docker nomad
 
 # install loki logging driver
-docker plugin install grafana/loki-docker-driver:$LOKI_DRIVER_VERSION --alias loki --grant-all-permissions
+docker plugin install $LOKI_DRIVER --alias loki --grant-all-permissions
 
 # cleanup
 apt-get -q -y purge wget unzip

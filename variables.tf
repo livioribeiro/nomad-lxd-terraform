@@ -1,6 +1,6 @@
 variable "ubuntu_version" {
   type    = string
-  default = "noble"
+  default = "oracular"
 }
 
 variable "base_network" {
