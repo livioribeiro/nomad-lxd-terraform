@@ -139,6 +139,13 @@ resource "incus_instance" "nomad_client" {
   type     = "virtual-machine"
   profiles = [incus_profile.nomad_cluster.name]
 
+  config = {
+    "cloud-init.user-data"  = data.cloudinit_config.nomad_client[each.key].rendered
+    "user.access_interface" = "enp5s0"
+    "limits.cpu" = 2
+    "limits.memory" = startswith(each.key, "nomad-infra-client-") ? "3GB" : "2GB"
+  }
+
   device {
     name = "enp5s0"
     type = "nic"
@@ -149,11 +156,18 @@ resource "incus_instance" "nomad_client" {
     }
   }
 
-  config = {
-    "cloud-init.user-data"  = data.cloudinit_config.nomad_client[each.key].rendered
-    "user.access_interface" = "enp5s0"
-    "limits.cpu" = 2
-    "limits.memory" = startswith(each.key, "nomad-infra-client-") ? "3GB" : "2GB"
+  device {
+    name = "agent"
+    type = "disk"
+
+    properties = {
+      source = "agent:config"
+    }
+  }
+
+  wait_for {
+    type = "ipv4"
+    nic = "enp5s0"
   }
 
   provisioner "remote-exec" {

@@ -30,8 +30,12 @@ data "cloudinit_config" "load_balancer" {
 
 resource "incus_instance" "load_balancer" {
   name     = local.load_balancer["name"]
-  image    = "images:ubntu/${var.ubuntu_version}"
+  image    = "${var.ubuntu_image}"
   profiles = [incus_profile.nomad_cluster.name]
+
+  config = {
+    "cloud-init.user-data" = data.cloudinit_config.load_balancer.rendered
+  }
 
   device {
     name = "eth0"
@@ -41,10 +45,6 @@ resource "incus_instance" "load_balancer" {
       network        = incus_network.nomad.name
       "ipv4.address" = local.load_balancer["host"]
     }
-  }
-
-  config = {
-    "cloud-init.user-data" = data.cloudinit_config.load_balancer.rendered
   }
 
   device {
@@ -65,6 +65,11 @@ resource "incus_instance" "load_balancer" {
       listen  = "tcp:0.0.0.0:443"
       connect = "tcp:127.0.0.1:443"
     }
+  }
+
+  wait_for {
+    type = "ipv4"
+    nic = "eth0"
   }
 
   provisioner "remote-exec" {

@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "1.22-rootless"
+  default = "1.24-rootless"
 }
 
 variable "gitea_host" {

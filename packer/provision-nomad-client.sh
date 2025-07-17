@@ -13,7 +13,7 @@ GPG_ENVOY_KEYRING=/usr/share/keyrings/envoy-keyring.gpg
 SOURCE_ENVOY="deb [arch=$(dpkg --print-architecture) signed-by=$GPG_ENVOY_KEYRING] $APT_ENVOY jammy main"
 
 apt-get -q update
-apt-get -q -y install wget unzip
+apt-get -q -y install wget unzip gpg
 
 wget -q -O- $GPG_HASHICORP | gpg --dearmor -o $GPG_HASHICORP_KEYRING
 echo $SOURCE_HASHICORP > /etc/apt/sources.list.d/hashicorp.list
@@ -46,14 +46,14 @@ tar -vxf /tmp/cni-plugins.tgz -C /opt/cni/bin
 wget -q -O /tmp/consul-cni.zip $CONSUL_CNI_URL
 unzip /tmp/consul-cni.zip consul-cni -d /opt/cni/bin
 
-chown -R root.root /opt/cni/bin
+chown -R root:root /opt/cni/bin
 chmod 755 /opt/cni/bin/*
 rm /tmp/cni-plugins.tgz
 
 usermod -aG docker nomad
 
 # install loki logging driver
-docker plugin install $LOKI_DRIVER --alias loki --grant-all-permissions
+docker plugin install $LOKI_DRIVER-$(dpkg --print-architecture) --alias loki --grant-all-permissions
 
 # cleanup
 apt-get -q -y purge wget unzip

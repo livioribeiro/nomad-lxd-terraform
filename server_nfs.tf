@@ -36,8 +36,19 @@ resource "incus_storage_volume" "nfs_server_data" {
 
 resource "incus_instance" "nfs_server" {
   name     = local.nfs_server["name"]
-  image    = "images:ubntu/${var.ubuntu_version}"
+  image    = "${var.ubuntu_image}"
   profiles = [incus_profile.nomad_cluster.name]
+
+  config = {
+    "cloud-init.user-data" = data.cloudinit_config.nfs_server.rendered
+    "security.privileged"  = true
+    "security.nesting"     = true
+    "raw.apparmor"         = <<-EOT
+      mount fstype=nfs*,
+      mount fstype=rpc_pipefs,
+      mount fstype=cgroup -> /sys/fs/cgroup/**,
+    EOT
+  }
 
   device {
     name = "eth0"
@@ -59,15 +70,9 @@ resource "incus_instance" "nfs_server" {
     }
   }
 
-  config = {
-    "cloud-init.user-data" = data.cloudinit_config.nfs_server.rendered
-    "security.privileged"  = true
-    "security.nesting"     = true
-    "raw.apparmor"         = <<-EOT
-      mount fstype=nfs*,
-      mount fstype=rpc_pipefs,
-      mount fstype=cgroup -> /sys/fs/cgroup/**,
-    EOT
+  wait_for {
+    type = "ipv4"
+    nic = "eth0"
   }
 
   provisioner "remote-exec" {

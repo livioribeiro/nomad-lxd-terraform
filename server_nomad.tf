@@ -104,7 +104,7 @@ data "cloudinit_config" "nomad_server" {
         "systemctl restart systemd-resolved",
         "ln -s /etc/certs.d/ca.pem /usr/local/share/ca-certificates/nomad-cluster.crt",
         "update-ca-certificates",
-        "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} vault.${var.external_domain}' >> /etc/hosts; fi",
+        # "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} vault.${var.external_domain}' >> /etc/hosts; fi",
         "if [ '${var.external_domain}' = 'localhost' ]; then echo '${local.load_balancer["host"]} keycloak.${var.apps_subdomain}.${var.external_domain}' >> /etc/hosts; fi",
       ]
     })
@@ -123,8 +123,12 @@ resource "incus_instance" "nomad_server" {
   for_each = local.nomad_servers
 
   name     = each.key
-  image    = "images:ubntu/${var.ubuntu_version}"
+  image    = "${var.ubuntu_image}"
   profiles = [incus_profile.nomad_cluster.name]
+
+  config = {
+    "cloud-init.user-data" = data.cloudinit_config.nomad_server[each.key].rendered
+  }
 
   device {
     name = "eth0"
@@ -146,8 +150,9 @@ resource "incus_instance" "nomad_server" {
     }
   }
 
-  config = {
-    "cloud-init.user-data" = data.cloudinit_config.nomad_server[each.key].rendered
+  wait_for {
+    type = "ipv4"
+    nic = "eth0"
   }
 
   provisioner "remote-exec" {

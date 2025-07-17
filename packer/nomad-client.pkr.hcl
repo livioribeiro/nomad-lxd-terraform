@@ -7,9 +7,9 @@ packer {
   }
 }
 
-variable "ubuntu_version" {
+variable "ubuntu_image" {
   type    = string
-  default = "oracular"
+  default = "images:ubuntu/oracular/cloud"
 }
 
 variable "cni_plugins_version" {
@@ -28,7 +28,7 @@ variable "loki_log_driver_version" {
 }
 
 source "incus" "nomad-client" {
-  image           = "images:ubuntu/${var.ubuntu_version}"
+  image           = "${var.ubuntu_image}"
   container_name  = "packer-nomad-client"
   output_image    = "nomad-client"
   virtual_machine = true

@@ -12,17 +12,17 @@ terraform {
 
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.6"
+      version = "~> 3.7"
     }
 
     http = {
       source  = "hashicorp/http"
-      version = "~> 3.4"
+      version = "~> 3.5"
     }
 
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0"
+      version = "~> 4.1"
     }
 
     cloudinit = {
@@ -47,17 +47,17 @@ terraform {
 
     consul = {
       source  = "hashicorp/consul"
-      version = "~> 2.21"
+      version = "~> 2.22"
     }
 
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 4.5"
+      version = "~> 5.1"
     }
 
     nomad = {
       source  = "hashicorp/nomad"
-      version = "~> 2.4"
+      version = "~> 2.5"
     }
   }
 }

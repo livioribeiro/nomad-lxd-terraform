@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "0.7.0"
+  default = "1.1.0"
 }
 
 variable "nfs_server_host" {

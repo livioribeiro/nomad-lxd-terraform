@@ -1,6 +1,11 @@
-variable "ubuntu_version" {
+variable ubuntu_version {
   type    = string
   default = "oracular"
+}
+
+variable ubuntu_image {
+  type    = string
+  default = "images:ubuntu/oracular/cloud"
 }
 
 variable "base_network" {

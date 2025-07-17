@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "v3.0.1"
+  default = "v3.5.0"
 }
 
 job "prometheus" {

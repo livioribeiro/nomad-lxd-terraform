@@ -54,8 +54,12 @@ resource "incus_instance" "consul_server" {
   for_each = local.consul_servers
 
   name     = each.key
-  image    = "images:ubntu/${var.ubuntu_version}"
+  image    = "${var.ubuntu_image}"
   profiles = [incus_profile.nomad_cluster.name]
+
+  config = {
+    "cloud-init.user-data" = data.cloudinit_config.consul_server.rendered
+  }
 
   device {
     name = "eth0"
@@ -77,8 +81,9 @@ resource "incus_instance" "consul_server" {
     }
   }
 
-  config = {
-    "cloud-init.user-data" = data.cloudinit_config.consul_server.rendered
+  wait_for {
+    type = "ipv4"
+    nic = "eth0"
   }
 
   provisioner "remote-exec" {

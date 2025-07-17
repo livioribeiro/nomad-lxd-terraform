@@ -1,6 +1,6 @@
 variable "version" {
   type    = string
-  default = "26.0"
+  default = "26.3"
 }
 
 variable "postgres_version" {

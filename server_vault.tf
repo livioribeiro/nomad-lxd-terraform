@@ -102,8 +102,12 @@ resource "incus_instance" "vault_server" {
   for_each = local.vault_servers
 
   name     = each.key
-  image    = "images:ubntu/${var.ubuntu_version}"
+  image    = "${var.ubuntu_image}"
   profiles = [incus_profile.nomad_cluster.name]
+
+  config = {
+    "cloud-init.user-data" = data.cloudinit_config.vault_server[each.key].rendered
+  }
 
   device {
     name = "eth0"
@@ -125,8 +129,9 @@ resource "incus_instance" "vault_server" {
     }
   }
 
-  config = {
-    "cloud-init.user-data" = data.cloudinit_config.vault_server[each.key].rendered
+  wait_for {
+    type = "ipv4"
+    nic = "eth0"
   }
 
   provisioner "remote-exec" {
